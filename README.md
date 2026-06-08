@@ -9,8 +9,9 @@ A reusable, production-grade backend platform built with **NestJS + TypeScript +
 | Phase | Description | Status |
 |-------|-------------|--------|
 | 0 | Project Foundation | ✅ Complete |
-| 1 | Database Infrastructure (Prisma + Postgres + Redis) | ⏳ Next |
-| 2+ | Users, Auth, RBAC, Audit, … | ⬜ Planned |
+| 1 | Database Infrastructure (Prisma + Postgres + Redis) | ✅ Complete |
+| 2 | User Module (CRUD) | ⏳ Next |
+| 3+ | Auth, RBAC, Audit, … | ⬜ Planned |
 
 ## Tech Stack
 
@@ -30,15 +31,26 @@ npm install
 # 2. Create your local environment file
 cp .env.example .env
 
-# 3. Run in watch mode
+# 3. Start PostgreSQL + Redis
+npm run docker:up
+
+# 4. Generate the Prisma client and apply migrations
+npm run prisma:generate
+npm run prisma:migrate
+
+# 5. (Optional) seed a baseline admin user
+npm run db:seed
+
+# 6. Run in watch mode
 npm run start:dev
 ```
 
-The API boots at `http://localhost:3000/api`.
+The API boots at `http://localhost:8000/api`.
 
 | Endpoint | Description |
 |----------|-------------|
-| `GET /api/v1/health` | Liveness + memory health check |
+| `GET /api/v1/health` | Liveness (process up) |
+| `GET /api/v1/health/readiness` | Readiness (PostgreSQL + Redis reachable) |
 | `GET /api/docs` | Swagger UI |
 
 ## Project Structure

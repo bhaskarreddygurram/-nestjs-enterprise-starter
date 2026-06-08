@@ -1,31 +1,47 @@
 import { Controller, Get } from '@nestjs/common';
 import {
   HealthCheck,
-  HealthCheckService,
   HealthCheckResult,
+  HealthCheckService,
+  PrismaHealthIndicator,
 } from '@nestjs/terminus';
 import { ApiOkResponse, ApiTags } from '@nestjs/swagger';
+import { PrismaService } from '../database/prisma.service';
+import { RedisHealthIndicator } from './indicators/redis.health';
 
 /**
  * Health endpoints used by container orchestrators and uptime checks.
  *
- * Phase 0: process-level liveness. A successful response confirms the HTTP
- * layer and application context are up. Phase 1 extends this with PostgreSQL
- * and Redis readiness indicators (so it answers "can I serve traffic?", not
- * just "am I alive?").
+ *  - `GET /health`            liveness: is the process up and responding?
+ *  - `GET /health/readiness`  readiness: can it serve traffic (DB + Redis)?
  *
- * Note: memory-threshold checks are intentionally avoided as a liveness
- * signal — they cause a busy-but-healthy service to be reported as down.
+ * Liveness intentionally avoids dependency checks so a transient DB blip does
+ * not cause the orchestrator to kill an otherwise-healthy process.
  */
 @ApiTags('Health')
 @Controller('health')
 export class HealthController {
-  constructor(private readonly health: HealthCheckService) {}
+  constructor(
+    private readonly health: HealthCheckService,
+    private readonly prismaIndicator: PrismaHealthIndicator,
+    private readonly prisma: PrismaService,
+    private readonly redisIndicator: RedisHealthIndicator,
+  ) {}
 
   @Get()
   @HealthCheck()
   @ApiOkResponse({ description: 'Service is alive' })
   check(): Promise<HealthCheckResult> {
     return this.health.check([]);
+  }
+
+  @Get('readiness')
+  @HealthCheck()
+  @ApiOkResponse({ description: 'Service and its dependencies are ready' })
+  readiness(): Promise<HealthCheckResult> {
+    return this.health.check([
+      () => this.prismaIndicator.pingCheck('database', this.prisma),
+      () => this.redisIndicator.isHealthy('redis'),
+    ]);
   }
 }

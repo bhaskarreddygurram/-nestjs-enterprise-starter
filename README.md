@@ -3,6 +3,7 @@
 A reusable, production-grade backend platform built with **NestJS + TypeScript + PostgreSQL + Prisma + Redis**, designed to be the foundation for any application (CRM, ERP, HR, Inventory, SaaS, E-commerce, Booking, Property Management).
 
 > 📐 Architecture & full roadmap: [`docs/ARCHITECTURE-ROADMAP.md`](docs/ARCHITECTURE-ROADMAP.md)
+> 🚀 How to run (full guide — setup, Docker, DB, troubleshooting): [`docs/RUNNING-THE-PROJECT.md`](docs/RUNNING-THE-PROJECT.md)
 
 ## Status
 

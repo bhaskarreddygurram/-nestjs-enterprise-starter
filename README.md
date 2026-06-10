@@ -11,8 +11,9 @@ A reusable, production-grade backend platform built with **NestJS + TypeScript +
 |-------|-------------|--------|
 | 0 | Project Foundation | ✅ Complete |
 | 1 | Database Infrastructure (Prisma + Postgres + Redis) | ✅ Complete |
-| 2 | User Module (CRUD) | ⏳ Next |
-| 3+ | Auth, RBAC, Audit, … | ⬜ Planned |
+| 2 | User Module (CRUD, pagination, argon2 hashing) | ✅ Complete |
+| 3 | Authentication (JWT) | ⏳ Next |
+| 4+ | Refresh Tokens, RBAC, Audit, … | ⬜ Planned |
 
 ## Tech Stack
 

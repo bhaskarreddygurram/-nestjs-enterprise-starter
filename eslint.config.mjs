@@ -31,4 +31,12 @@ export default tseslint.config(
       '@typescript-eslint/no-unsafe-argument': 'warn',
     },
   },
+  {
+    // Jest's expect(mock.method) pattern trips unbound-method; the
+    // typescript-eslint docs recommend disabling it for test files.
+    files: ['**/*.spec.ts', '**/*.e2e-spec.ts'],
+    rules: {
+      '@typescript-eslint/unbound-method': 'off',
+    },
+  },
 );

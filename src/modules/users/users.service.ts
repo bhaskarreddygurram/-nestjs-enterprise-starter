@@ -3,7 +3,7 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { Prisma } from '@prisma/client';
+import { Prisma, User } from '@prisma/client';
 import * as argon2 from 'argon2';
 import { PageMetaDto, PaginatedDto } from '../../common/dto/page-meta.dto';
 import { parseSort } from '../../common/utils/sort.util';
@@ -98,5 +98,18 @@ export class UsersService {
       throw new NotFoundException(`User with id "${id}" not found`);
     }
     await this.usersRepository.softDelete(id);
+  }
+
+  // --- Internal, for the Auth module only --------------------------------
+  // These return the raw entity (including passwordHash) and must never be
+  // surfaced through an HTTP response. Auth uses them to verify credentials
+  // and resolve the JWT subject.
+
+  findEntityByEmail(email: string): Promise<User | null> {
+    return this.usersRepository.findByEmail(email);
+  }
+
+  findEntityById(id: string): Promise<User | null> {
+    return this.usersRepository.findById(id);
   }
 }

@@ -12,8 +12,9 @@ A reusable, production-grade backend platform built with **NestJS + TypeScript +
 | 0 | Project Foundation | ✅ Complete |
 | 1 | Database Infrastructure (Prisma + Postgres + Redis) | ✅ Complete |
 | 2 | User Module (CRUD, pagination, argon2 hashing) | ✅ Complete |
-| 3 | Authentication (JWT) | ⏳ Next |
-| 4+ | Refresh Tokens, RBAC, Audit, … | ⬜ Planned |
+| 3 | Authentication (JWT login/register, global guard) | ✅ Complete |
+| 4 | Refresh Tokens & Sessions | ⏳ Next |
+| 5+ | RBAC, Audit, Files, … | ⬜ Planned |
 
 ## Tech Stack
 
@@ -49,11 +50,17 @@ npm run start:dev
 
 The API boots at `http://localhost:8000/api`.
 
-| Endpoint | Description |
-|----------|-------------|
-| `GET /api/v1/health` | Liveness (process up) |
-| `GET /api/v1/health/readiness` | Readiness (PostgreSQL + Redis reachable) |
-| `GET /api/docs` | Swagger UI |
+| Endpoint | Auth | Description |
+|----------|------|-------------|
+| `GET /api/v1/health` | public | Liveness (process up) |
+| `GET /api/v1/health/readiness` | public | Readiness (PostgreSQL + Redis reachable) |
+| `POST /api/v1/auth/register` | public | Create account, returns access token |
+| `POST /api/v1/auth/login` | public | Log in, returns access token |
+| `GET /api/v1/auth/me` | 🔒 Bearer | Current authenticated user |
+| `… /api/v1/users` | 🔒 Bearer | User CRUD (all protected) |
+| `GET /api/docs` | public | Swagger UI (use **Authorize** to send the token) |
+
+Seeded dev login: `admin@example.com` / `Admin123!ChangeMe`.
 
 ## Project Structure
 

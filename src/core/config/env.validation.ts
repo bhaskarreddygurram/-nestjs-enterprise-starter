@@ -29,6 +29,10 @@ export const envValidationSchema = Joi.object({
   REDIS_PASSWORD: Joi.string().allow('').optional(),
   REDIS_DB: Joi.number().integer().min(0).default(0),
 
+  // JWT (access tokens — refresh tokens arrive in Phase 4)
+  JWT_ACCESS_SECRET: Joi.string().min(16).required(),
+  JWT_ACCESS_EXPIRES_IN: Joi.string().default('15m'),
+
   // Postgres container credentials (used by docker-compose; optional for the app)
   POSTGRES_USER: Joi.string().optional(),
   POSTGRES_PASSWORD: Joi.string().optional(),

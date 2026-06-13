@@ -27,6 +27,10 @@ export interface AppConfig {
     password?: string;
     db: number;
   };
+  jwt: {
+    accessSecret: string;
+    accessExpiresIn: string;
+  };
 }
 
 export default (): AppConfig => ({
@@ -50,5 +54,9 @@ export default (): AppConfig => ({
     port: parseInt(process.env.REDIS_PORT ?? '6379', 10),
     password: process.env.REDIS_PASSWORD || undefined,
     db: parseInt(process.env.REDIS_DB ?? '0', 10),
+  },
+  jwt: {
+    accessSecret: process.env.JWT_ACCESS_SECRET ?? '',
+    accessExpiresIn: process.env.JWT_ACCESS_EXPIRES_IN ?? '15m',
   },
 });

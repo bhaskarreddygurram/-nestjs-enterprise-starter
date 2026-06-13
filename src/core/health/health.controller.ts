@@ -6,6 +6,7 @@ import {
   PrismaHealthIndicator,
 } from '@nestjs/terminus';
 import { ApiOkResponse, ApiTags } from '@nestjs/swagger';
+import { Public } from '../../common/decorators/public.decorator';
 import { PrismaService } from '../database/prisma.service';
 import { RedisHealthIndicator } from './indicators/redis.health';
 
@@ -19,6 +20,7 @@ import { RedisHealthIndicator } from './indicators/redis.health';
  * not cause the orchestrator to kill an otherwise-healthy process.
  */
 @ApiTags('Health')
+@Public()
 @Controller('health')
 export class HealthController {
   constructor(

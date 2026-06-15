@@ -12,6 +12,7 @@ import {
   Query,
 } from '@nestjs/common';
 import {
+  ApiBearerAuth,
   ApiConflictResponse,
   ApiCreatedResponse,
   ApiNoContentResponse,
@@ -19,6 +20,7 @@ import {
   ApiOkResponse,
   ApiOperation,
   ApiTags,
+  ApiUnauthorizedResponse,
 } from '@nestjs/swagger';
 import { PaginatedDto } from '../../common/dto/page-meta.dto';
 import { CreateUserDto } from './dto/create-user.dto';
@@ -28,10 +30,13 @@ import { UserResponseDto } from './dto/user-response.dto';
 import { UsersService } from './users.service';
 
 /**
- * NOTE: These endpoints are intentionally unauthenticated in Phase 2.
- * Phase 3 (JWT) + Phase 5 (RBAC) will lock them down with guards.
+ * All routes require a valid JWT (global JwtAuthGuard, Phase 3).
+ * @ApiBearerAuth() makes Swagger attach the bearer token after you click
+ * "Authorize". Fine-grained RBAC arrives in Phase 5.
  */
 @ApiTags('Users')
+@ApiBearerAuth()
+@ApiUnauthorizedResponse({ description: 'Missing or invalid access token' })
 @Controller('users')
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}

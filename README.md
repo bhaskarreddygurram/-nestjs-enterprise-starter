@@ -13,8 +13,9 @@ A reusable, production-grade backend platform built with **NestJS + TypeScript +
 | 1 | Database Infrastructure (Prisma + Postgres + Redis) | ✅ Complete |
 | 2 | User Module (CRUD, pagination, argon2 hashing) | ✅ Complete |
 | 3 | Authentication (JWT login/register, global guard) | ✅ Complete |
-| 4 | Refresh Tokens & Sessions | ⏳ Next |
-| 5+ | RBAC, Audit, Files, … | ⬜ Planned |
+| 4 | Refresh Tokens & Sessions (rotation + reuse detection) | ✅ Complete |
+| 5 | Authorization (RBAC) | ⏳ Next |
+| 6+ | Hardening, Audit, Files, … | ⬜ Planned |
 
 ## Tech Stack
 
@@ -54,8 +55,11 @@ The API boots at `http://localhost:8000/api`.
 |----------|------|-------------|
 | `GET /api/v1/health` | public | Liveness (process up) |
 | `GET /api/v1/health/readiness` | public | Readiness (PostgreSQL + Redis reachable) |
-| `POST /api/v1/auth/register` | public | Create account, returns access token |
-| `POST /api/v1/auth/login` | public | Log in, returns access token |
+| `POST /api/v1/auth/register` | public | Create account, returns access + refresh token |
+| `POST /api/v1/auth/login` | public | Log in, returns access + refresh token |
+| `POST /api/v1/auth/refresh` | public | Rotate refresh token → new token pair |
+| `POST /api/v1/auth/logout` | public | Revoke one refresh-token session |
+| `POST /api/v1/auth/logout-all` | 🔒 Bearer | Revoke all sessions for the user |
 | `GET /api/v1/auth/me` | 🔒 Bearer | Current authenticated user |
 | `… /api/v1/users` | 🔒 Bearer | User CRUD (all protected) |
 | `GET /api/docs` | public | Swagger UI (use **Authorize** to send the token) |

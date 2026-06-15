@@ -7,6 +7,7 @@ import * as argon2 from 'argon2';
 import { UserResponseDto } from '../users/dto/user-response.dto';
 import { UsersService } from '../users/users.service';
 import { AuthService } from './auth.service';
+import { RefreshTokenService } from './refresh-token.service';
 
 jest.mock('argon2', () => ({
   verify: jest.fn(),
@@ -52,6 +53,15 @@ describe('AuthService', () => {
         {
           provide: ConfigService,
           useValue: { get: jest.fn().mockReturnValue('15m') },
+        },
+        {
+          provide: RefreshTokenService,
+          useValue: {
+            issue: jest.fn().mockResolvedValue('row-id.refresh-secret'),
+            rotate: jest.fn(),
+            revoke: jest.fn(),
+            revokeAll: jest.fn(),
+          },
         },
       ],
     }).compile();

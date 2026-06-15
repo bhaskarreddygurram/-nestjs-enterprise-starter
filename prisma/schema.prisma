@@ -24,6 +24,26 @@ model User {
   updatedAt        DateTime  @updatedAt @map("updated_at")
   deletedAt        DateTime? @map("deleted_at")
 
+  refreshTokens RefreshToken[]
+
   @@index([email])
   @@map("users")
+}
+
+/// A single refresh-token session. Only the SHA-256 hash of the token secret
+/// is stored — never the token itself. Rotation revokes the old row and links
+/// it to its successor via `replacedById`, enabling reuse detection.
+model RefreshToken {
+  id           String    @id @default(uuid()) @db.Uuid
+  userId       String    @map("user_id") @db.Uuid
+  tokenHash    String    @map("token_hash")
+  expiresAt    DateTime  @map("expires_at")
+  revokedAt    DateTime? @map("revoked_at")
+  replacedById String?   @map("replaced_by_id") @db.Uuid
+  createdAt    DateTime  @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("refresh_tokens")
 }

@@ -7,6 +7,11 @@ export class AuthResponseDto {
   })
   accessToken!: string;
 
+  @ApiProperty({
+    description: 'Opaque refresh token — exchange at POST /auth/refresh',
+  })
+  refreshToken!: string;
+
   @ApiProperty({ example: 'Bearer' })
   tokenType = 'Bearer';
 

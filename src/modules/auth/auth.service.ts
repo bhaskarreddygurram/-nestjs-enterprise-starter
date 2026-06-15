@@ -8,6 +8,7 @@ import { AuthResponseDto } from './dto/auth-response.dto';
 import { LoginDto } from './dto/login.dto';
 import { RegisterDto } from './dto/register.dto';
 import { JwtPayload } from './jwt-payload.interface';
+import { RefreshTokenService } from './refresh-token.service';
 
 @Injectable()
 export class AuthService {
@@ -15,6 +16,7 @@ export class AuthService {
     private readonly usersService: UsersService,
     private readonly jwtService: JwtService,
     private readonly config: ConfigService,
+    private readonly refreshTokens: RefreshTokenService,
   ) {}
 
   async register(dto: RegisterDto): Promise<AuthResponseDto> {
@@ -31,6 +33,35 @@ export class AuthService {
   async login(dto: LoginDto): Promise<AuthResponseDto> {
     const user = await this.validateCredentials(dto.email, dto.password);
     return this.buildAuthResponse(user);
+  }
+
+  /**
+   * Exchange a valid refresh token for a fresh access + refresh pair.
+   * The old refresh token is rotated out (revoked); reuse is detected by
+   * RefreshTokenService and revokes the whole session set.
+   */
+  async refresh(rawRefreshToken: string): Promise<AuthResponseDto> {
+    const { userId, token } = await this.refreshTokens.rotate(rawRefreshToken);
+
+    const entity = await this.usersService.findEntityById(userId);
+    if (!entity || !entity.isActive) {
+      // User deactivated since the token was issued — kill the session set.
+      await this.refreshTokens.revokeAll(userId);
+      throw new UnauthorizedException('User no longer active');
+    }
+
+    const user = UserResponseDto.fromEntity(entity);
+    return this.buildAuthResponse(user, token);
+  }
+
+  /** Revoke a single session. */
+  async logout(rawRefreshToken: string): Promise<void> {
+    await this.refreshTokens.revoke(rawRefreshToken);
+  }
+
+  /** Revoke every session for the user. */
+  async logoutAll(userId: string): Promise<void> {
+    await this.refreshTokens.revokeAll(userId);
   }
 
   /**
@@ -62,14 +93,23 @@ export class AuthService {
     return UserResponseDto.fromEntity(entity);
   }
 
+  /**
+   * Build the auth response. When `existingRefreshToken` is supplied (the
+   * refresh flow), it is reused; otherwise a new session token is issued
+   * (login/register).
+   */
   private async buildAuthResponse(
     user: UserResponseDto,
+    existingRefreshToken?: string,
   ): Promise<AuthResponseDto> {
     const payload: JwtPayload = { sub: user.id, email: user.email };
     const accessToken = await this.jwtService.signAsync(payload);
+    const refreshToken =
+      existingRefreshToken ?? (await this.refreshTokens.issue(user.id));
 
     const response = new AuthResponseDto();
     response.accessToken = accessToken;
+    response.refreshToken = refreshToken;
     response.expiresIn = this.config.get<string>('jwt.accessExpiresIn', '15m');
     response.user = user;
     return response;

@@ -7,6 +7,8 @@ import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { UsersModule } from '../users/users.module';
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
+import { RefreshTokenRepository } from './refresh-token.repository';
+import { RefreshTokenService } from './refresh-token.service';
 import { JwtStrategy } from './strategies/jwt.strategy';
 
 @Module({
@@ -31,6 +33,8 @@ import { JwtStrategy } from './strategies/jwt.strategy';
   providers: [
     AuthService,
     JwtStrategy,
+    RefreshTokenService,
+    RefreshTokenRepository,
     // Registered globally: every route requires a valid JWT unless @Public().
     { provide: APP_GUARD, useClass: JwtAuthGuard },
   ],

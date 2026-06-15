@@ -30,6 +30,7 @@ export interface AppConfig {
   jwt: {
     accessSecret: string;
     accessExpiresIn: string;
+    refreshExpiresInDays: number;
   };
 }
 
@@ -58,5 +59,9 @@ export default (): AppConfig => ({
   jwt: {
     accessSecret: process.env.JWT_ACCESS_SECRET ?? '',
     accessExpiresIn: process.env.JWT_ACCESS_EXPIRES_IN ?? '15m',
+    refreshExpiresInDays: parseInt(
+      process.env.JWT_REFRESH_EXPIRES_IN_DAYS ?? '7',
+      10,
+    ),
   },
 });

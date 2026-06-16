@@ -7,6 +7,7 @@ import {
 } from '@nestjs/terminus';
 import { ApiOkResponse, ApiTags } from '@nestjs/swagger';
 import { Public } from '../../common/decorators/public.decorator';
+import { SkipResponseTransform } from '../../common/decorators/skip-response-transform.decorator';
 import { PrismaService } from '../database/prisma.service';
 import { RedisHealthIndicator } from './indicators/redis.health';
 
@@ -21,6 +22,7 @@ import { RedisHealthIndicator } from './indicators/redis.health';
  */
 @ApiTags('Health')
 @Public()
+@SkipResponseTransform()
 @Controller('health')
 export class HealthController {
   constructor(

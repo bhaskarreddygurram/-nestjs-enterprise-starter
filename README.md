@@ -15,8 +15,9 @@ A reusable, production-grade backend platform built with **NestJS + TypeScript +
 | 3 | Authentication (JWT login/register, global guard) | ✅ Complete |
 | 4 | Refresh Tokens & Sessions (rotation + reuse detection) | ✅ Complete |
 | 5 | Authorization (RBAC: roles + permissions) | ✅ Complete |
-| 6 | Cross-cutting Hardening | ⏳ Next |
-| 7+ | Audit, Files, Notifications, … | ⬜ Planned |
+| 6 | Cross-cutting Hardening (envelopes, Helmet, rate limit) | ✅ Complete |
+| 7 | Audit Logging | ⏳ Next |
+| 8+ | Files, Notifications, … | ⬜ Planned |
 
 ## Tech Stack
 
@@ -71,6 +72,22 @@ The API boots at `http://localhost:8000/api`.
 Seeded dev login: `admin@example.com` / `Admin123!ChangeMe` (role `admin`, all permissions).
 
 **RBAC model:** permission-based (`resource:action`). `@Roles()` / `@Permissions()` decorators are enforced by a global `AuthorizationGuard` that runs after the JWT guard. Permissions are resolved per-request from the user's roles.
+
+**Response format (Phase 6):** every response is wrapped in a consistent envelope.
+
+```jsonc
+// success
+{ "success": true, "statusCode": 200, "message": "Success",
+  "data": { /* ... */ }, "meta": null,
+  "timestamp": "...", "path": "/api/v1/...", "requestId": "..." }
+
+// error
+{ "success": false, "statusCode": 401, "message": "Invalid credentials",
+  "errorCode": "UNAUTHORIZED", "errors": null,
+  "timestamp": "...", "path": "/api/v1/...", "requestId": "..." }
+```
+
+Paginated lists put the array in `data` and pagination in `meta`. Health endpoints are exempt (native Terminus shape). Also active: **Helmet** headers, **`x-request-id`** correlation, per-request logging, and **rate limiting** (`429` when exceeded; auth routes stricter).
 
 ## Project Structure
 

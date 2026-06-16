@@ -44,20 +44,24 @@ describe('Refresh tokens (e2e)', () => {
 
   it('register returns both an access and a refresh token', async () => {
     const res = await post('/auth/register', { email, password }).expect(201);
-    const body = res.body as { accessToken: string; refreshToken: string };
+    const body = (
+      res.body as { data: { accessToken: string; refreshToken: string } }
+    ).data;
     expect(body.accessToken).toBeDefined();
     expect(body.refreshToken).toContain('.');
   });
 
   it('rotates: refresh issues a new pair and the old token stops working', async () => {
     const login = await post('/auth/login', { email, password }).expect(200);
-    const first = (login.body as { refreshToken: string }).refreshToken;
+    const first = (login.body as { data: { refreshToken: string } }).data
+      .refreshToken;
 
     // Use the refresh token once → get a new one.
     const refreshed = await post('/auth/refresh', {
       refreshToken: first,
     }).expect(200);
-    const second = (refreshed.body as { refreshToken: string }).refreshToken;
+    const second = (refreshed.body as { data: { refreshToken: string } }).data
+      .refreshToken;
     expect(second).not.toBe(first);
 
     // The NEW token works.
@@ -66,13 +70,15 @@ describe('Refresh tokens (e2e)', () => {
 
   it('detects reuse: replaying a rotated token → 401 and kills the family', async () => {
     const login = await post('/auth/login', { email, password }).expect(200);
-    const original = (login.body as { refreshToken: string }).refreshToken;
+    const original = (login.body as { data: { refreshToken: string } }).data
+      .refreshToken;
 
     // Rotate once → `original` is now revoked, `next` is active.
     const rotated = await post('/auth/refresh', {
       refreshToken: original,
     }).expect(200);
-    const next = (rotated.body as { refreshToken: string }).refreshToken;
+    const next = (rotated.body as { data: { refreshToken: string } }).data
+      .refreshToken;
 
     // Replay the OLD token → reuse detected → 401.
     await post('/auth/refresh', { refreshToken: original }).expect(401);
@@ -87,7 +93,8 @@ describe('Refresh tokens (e2e)', () => {
 
   it('logout revokes a single session', async () => {
     const login = await post('/auth/login', { email, password }).expect(200);
-    const rt = (login.body as { refreshToken: string }).refreshToken;
+    const rt = (login.body as { data: { refreshToken: string } }).data
+      .refreshToken;
 
     await post('/auth/logout', { refreshToken: rt }).expect(204);
     // Revoked token can no longer be refreshed.
@@ -97,12 +104,14 @@ describe('Refresh tokens (e2e)', () => {
   it('logout-all revokes every session for the user', async () => {
     const a = (
       (await post('/auth/login', { email, password }).expect(200)).body as {
-        refreshToken: string;
+        data: { refreshToken: string };
       }
-    ).refreshToken;
+    ).data.refreshToken;
     const loginB = await post('/auth/login', { email, password }).expect(200);
-    const accessB = (loginB.body as { accessToken: string }).accessToken;
-    const b = (loginB.body as { refreshToken: string }).refreshToken;
+    const accessB = (loginB.body as { data: { accessToken: string } }).data
+      .accessToken;
+    const b = (loginB.body as { data: { refreshToken: string } }).data
+      .refreshToken;
 
     // Authenticated logout-all using session B's access token.
     await request(app.getHttpServer())

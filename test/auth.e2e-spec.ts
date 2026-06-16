@@ -47,10 +47,11 @@ describe('Auth (e2e)', () => {
       .send({ email, password, firstName: 'Flow' })
       .expect(201);
 
-    const body = res.body as {
-      accessToken: string;
-      user: Record<string, unknown>;
-    };
+    const body = (
+      res.body as {
+        data: { accessToken: string; user: Record<string, unknown> };
+      }
+    ).data;
     expect(body.accessToken).toBeDefined();
     expect(body.user.email).toBe(email);
     expect(body.user.passwordHash).toBeUndefined();
@@ -73,7 +74,7 @@ describe('Auth (e2e)', () => {
       .send({ email, password })
       .expect(200);
 
-    token = (res.body as { accessToken: string }).accessToken;
+    token = (res.body as { data: { accessToken: string } }).data.accessToken;
     expect(token).toBeDefined();
   });
 
@@ -90,7 +91,7 @@ describe('Auth (e2e)', () => {
       .set('Authorization', `Bearer ${token}`)
       .expect(200);
 
-    expect((res.body as { email: string }).email).toBe(email);
+    expect((res.body as { data: { email: string } }).data.email).toBe(email);
   });
 
   it('GET /auth/me with a garbage token → 401', () => {

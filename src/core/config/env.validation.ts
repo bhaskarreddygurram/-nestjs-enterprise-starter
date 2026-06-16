@@ -36,6 +36,10 @@ export const envValidationSchema = Joi.object({
   // Refresh tokens (opaque, DB-backed, rotated)
   JWT_REFRESH_EXPIRES_IN_DAYS: Joi.number().integer().min(1).default(7),
 
+  // Rate limiting (global default; auth routes are stricter via @Throttle)
+  THROTTLE_TTL: Joi.number().integer().min(1000).default(60000),
+  THROTTLE_LIMIT: Joi.number().integer().min(1).default(100),
+
   // Postgres container credentials (used by docker-compose; optional for the app)
   POSTGRES_USER: Joi.string().optional(),
   POSTGRES_PASSWORD: Joi.string().optional(),

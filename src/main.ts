@@ -2,6 +2,7 @@ import { Logger, ValidationPipe, VersioningType } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { NestFactory } from '@nestjs/core';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+import helmet from 'helmet';
 import { AppModule } from './app.module';
 
 async function bootstrap(): Promise<void> {
@@ -11,6 +12,9 @@ async function bootstrap(): Promise<void> {
 
   const apiPrefix = config.get<string>('api.prefix', 'api');
   const port = config.get<number>('port', 3000);
+
+  // Security headers
+  app.use(helmet());
 
   // Global route prefix: /api/...
   app.setGlobalPrefix(apiPrefix);

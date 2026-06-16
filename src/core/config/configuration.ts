@@ -32,6 +32,10 @@ export interface AppConfig {
     accessExpiresIn: string;
     refreshExpiresInDays: number;
   };
+  throttle: {
+    ttl: number;
+    limit: number;
+  };
 }
 
 export default (): AppConfig => ({
@@ -63,5 +67,9 @@ export default (): AppConfig => ({
       process.env.JWT_REFRESH_EXPIRES_IN_DAYS ?? '7',
       10,
     ),
+  },
+  throttle: {
+    ttl: parseInt(process.env.THROTTLE_TTL ?? '60000', 10),
+    limit: parseInt(process.env.THROTTLE_LIMIT ?? '100', 10),
   },
 });

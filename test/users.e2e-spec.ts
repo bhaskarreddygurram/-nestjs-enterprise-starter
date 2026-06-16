@@ -49,7 +49,8 @@ describe('Users (e2e)', () => {
       .post('/api/v1/auth/login')
       .send({ email: 'admin@example.com', password: 'Admin123!ChangeMe' })
       .expect(200);
-    adminToken = (login.body as { accessToken: string }).accessToken;
+    adminToken = (login.body as { data: { accessToken: string } }).data
+      .accessToken;
 
     // A freshly-registered user has no roles → no permissions.
     const reg = await request(app.getHttpServer())
@@ -59,7 +60,8 @@ describe('Users (e2e)', () => {
         password: 'Str0ng!Passw0rd',
       })
       .expect(201);
-    noPermToken = (reg.body as { accessToken: string }).accessToken;
+    noPermToken = (reg.body as { data: { accessToken: string } }).data
+      .accessToken;
   });
 
   afterAll(async () => {
@@ -89,7 +91,7 @@ describe('Users (e2e)', () => {
       })
       .expect(201);
 
-    const body = res.body as Record<string, unknown>;
+    const body = (res.body as { data: Record<string, unknown> }).data;
     expect(body.email).toBe(email);
     expect(body.passwordHash).toBeUndefined();
     expect(body.id).toBeDefined();
@@ -141,7 +143,7 @@ describe('Users (e2e)', () => {
       .set('Authorization', adminAuth())
       .expect(200);
 
-    expect((res.body as { email: string }).email).toBe(email);
+    expect((res.body as { data: { email: string } }).data.email).toBe(email);
   });
 
   it('GET /users/:id with a non-uuid → 400', () => {
@@ -158,7 +160,9 @@ describe('Users (e2e)', () => {
       .send({ firstName: 'Updated' })
       .expect(200);
 
-    expect((res.body as { firstName: string }).firstName).toBe('Updated');
+    expect((res.body as { data: { firstName: string } }).data.firstName).toBe(
+      'Updated',
+    );
   });
 
   it('DELETE /users/:id → 204 soft-deletes', () => {

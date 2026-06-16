@@ -28,7 +28,7 @@ describe('RBAC (e2e)', () => {
       .post('/api/v1/auth/login')
       .send({ email: e, password: p })
       .expect(200);
-    return (res.body as { accessToken: string }).accessToken;
+    return (res.body as { data: { accessToken: string } }).data.accessToken;
   };
 
   beforeAll(async () => {
@@ -55,7 +55,9 @@ describe('RBAC (e2e)', () => {
       .post('/api/v1/auth/register')
       .send({ email, password })
       .expect(201);
-    const body = reg.body as { user: { id: string }; accessToken: string };
+    const body = (
+      reg.body as { data: { user: { id: string }; accessToken: string } }
+    ).data;
     userId = body.user.id;
   });
 

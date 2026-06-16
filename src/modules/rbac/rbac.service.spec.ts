@@ -1,6 +1,7 @@
 import { NotFoundException } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import { UsersService } from '../users/users.service';
+import { AuditEmitter } from '../audit/audit.emitter';
 import { RbacRepository, RoleWithPermissions } from './rbac.repository';
 import { RbacService } from './rbac.service';
 
@@ -27,6 +28,7 @@ describe('RbacService', () => {
           provide: UsersService,
           useValue: { findEntityById: jest.fn() },
         },
+        { provide: AuditEmitter, useValue: { emit: jest.fn() } },
       ],
     }).compile();
 

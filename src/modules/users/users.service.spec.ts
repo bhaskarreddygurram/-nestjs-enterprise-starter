@@ -2,6 +2,7 @@ import { ConflictException, NotFoundException } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import { User } from '@prisma/client';
 import { UserQueryDto } from './dto/user-query.dto';
+import { AuditEmitter } from '../audit/audit.emitter';
 import { UsersRepository } from './users.repository';
 import { UsersService } from './users.service';
 
@@ -42,6 +43,7 @@ describe('UsersService', () => {
             softDelete: jest.fn(),
           },
         },
+        { provide: AuditEmitter, useValue: { emit: jest.fn() } },
       ],
     }).compile();
 

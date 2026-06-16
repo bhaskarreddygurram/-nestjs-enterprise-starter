@@ -6,6 +6,7 @@ import { User } from '@prisma/client';
 import * as argon2 from 'argon2';
 import { UserResponseDto } from '../users/dto/user-response.dto';
 import { UsersService } from '../users/users.service';
+import { AuditEmitter } from '../audit/audit.emitter';
 import { AuthService } from './auth.service';
 import { RefreshTokenService } from './refresh-token.service';
 
@@ -63,6 +64,7 @@ describe('AuthService', () => {
             revokeAll: jest.fn(),
           },
         },
+        { provide: AuditEmitter, useValue: { emit: jest.fn() } },
       ],
     }).compile();
 

@@ -4,6 +4,8 @@ import { JwtService } from '@nestjs/jwt';
 import * as argon2 from 'argon2';
 import { UserResponseDto } from '../users/dto/user-response.dto';
 import { UsersService } from '../users/users.service';
+import { AuditEmitter } from '../audit/audit.emitter';
+import { AuditAction } from '../../shared/events/audit.event';
 import { AuthResponseDto } from './dto/auth-response.dto';
 import { LoginDto } from './dto/login.dto';
 import { RegisterDto } from './dto/register.dto';
@@ -17,6 +19,7 @@ export class AuthService {
     private readonly jwtService: JwtService,
     private readonly config: ConfigService,
     private readonly refreshTokens: RefreshTokenService,
+    private readonly audit: AuditEmitter,
   ) {}
 
   async register(dto: RegisterDto): Promise<AuthResponseDto> {
@@ -27,11 +30,24 @@ export class AuthService {
       firstName: dto.firstName,
       lastName: dto.lastName,
     });
+    this.audit.emit({
+      action: AuditAction.AUTH_REGISTER,
+      resource: 'auth',
+      actorId: user.id,
+      resourceId: user.id,
+      metadata: { email: user.email },
+    });
     return this.buildAuthResponse(user);
   }
 
   async login(dto: LoginDto): Promise<AuthResponseDto> {
     const user = await this.validateCredentials(dto.email, dto.password);
+    this.audit.emit({
+      action: AuditAction.AUTH_LOGIN,
+      resource: 'auth',
+      actorId: user.id,
+      metadata: { email: user.email },
+    });
     return this.buildAuthResponse(user);
   }
 
@@ -51,17 +67,29 @@ export class AuthService {
     }
 
     const user = UserResponseDto.fromEntity(entity);
+    this.audit.emit({
+      action: AuditAction.AUTH_TOKEN_REFRESHED,
+      resource: 'auth',
+      actorId: user.id,
+    });
     return this.buildAuthResponse(user, token);
   }
 
   /** Revoke a single session. */
   async logout(rawRefreshToken: string): Promise<void> {
     await this.refreshTokens.revoke(rawRefreshToken);
+    this.audit.emit({ action: AuditAction.AUTH_LOGOUT, resource: 'auth' });
   }
 
   /** Revoke every session for the user. */
   async logoutAll(userId: string): Promise<void> {
     await this.refreshTokens.revokeAll(userId);
+    this.audit.emit({
+      action: AuditAction.AUTH_LOGOUT_ALL,
+      resource: 'auth',
+      actorId: userId,
+      resourceId: userId,
+    });
   }
 
   /**

@@ -82,6 +82,25 @@ model UserRole {
   @@map("user_roles")
 }
 
+/// Append-only activity trail. Intentionally has NO foreign key to users so
+/// the record survives even if the actor account is later deleted.
+model AuditLog {
+  id         String   @id @default(uuid()) @db.Uuid
+  actorId    String?  @map("actor_id") @db.Uuid // who performed it (null = system/anonymous)
+  action     String // e.g. 'auth.login', 'user.created'
+  resource   String // e.g. 'auth', 'user', 'role'
+  resourceId String?  @map("resource_id") // affected entity id
+  metadata   Json? // arbitrary context
+  ipAddress  String?  @map("ip_address")
+  requestId  String?  @map("request_id")
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  @@index([actorId])
+  @@index([action])
+  @@index([createdAt])
+  @@map("audit_logs")
+}
+
 /// A single refresh-token session. Only the SHA-256 hash of the token secret
 /// is stored — never the token itself. Rotation revokes the old row and links
 /// it to its successor via `replacedById`, enabling reuse detection.

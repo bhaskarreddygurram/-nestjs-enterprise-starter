@@ -1,5 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { Role } from '@prisma/client';
+import { AuditEmitter } from '../audit/audit.emitter';
+import { AuditAction } from '../../shared/events/audit.event';
 import { UsersService } from '../users/users.service';
 import { RbacRepository } from './rbac.repository';
 
@@ -13,6 +15,7 @@ export class RbacService {
   constructor(
     private readonly repository: RbacRepository,
     private readonly usersService: UsersService,
+    private readonly audit: AuditEmitter,
   ) {}
 
   /**
@@ -42,11 +45,23 @@ export class RbacService {
   async assignRoleToUser(userId: string, roleName: string): Promise<void> {
     const { role } = await this.resolve(userId, roleName);
     await this.repository.assignRole(userId, role.id);
+    this.audit.emit({
+      action: AuditAction.ROLE_ASSIGNED,
+      resource: 'role',
+      resourceId: userId,
+      metadata: { role: roleName },
+    });
   }
 
   async removeRoleFromUser(userId: string, roleName: string): Promise<void> {
     const { role } = await this.resolve(userId, roleName);
     await this.repository.removeRole(userId, role.id);
+    this.audit.emit({
+      action: AuditAction.ROLE_REMOVED,
+      resource: 'role',
+      resourceId: userId,
+      metadata: { role: roleName },
+    });
   }
 
   /** Validate that both the user and the role exist. */

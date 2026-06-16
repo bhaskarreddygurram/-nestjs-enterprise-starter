@@ -16,8 +16,9 @@ A reusable, production-grade backend platform built with **NestJS + TypeScript +
 | 4 | Refresh Tokens & Sessions (rotation + reuse detection) | ✅ Complete |
 | 5 | Authorization (RBAC: roles + permissions) | ✅ Complete |
 | 6 | Cross-cutting Hardening (envelopes, Helmet, rate limit) | ✅ Complete |
-| 7 | Audit Logging | ⏳ Next |
-| 8+ | Files, Notifications, … | ⬜ Planned |
+| 7 | Audit Logging (event-driven, immutable trail) | ✅ Complete |
+| 8 | File Management | ⏳ Next |
+| 9+ | Notifications, 2FA, … | ⬜ Planned |
 
 ## Tech Stack
 
@@ -67,6 +68,7 @@ The API boots at `http://localhost:8000/api`.
 | `GET /api/v1/roles` | 🔒 + `role:read` | List roles |
 | `POST /api/v1/users/:id/roles` | 🔒 + `role:assign` | Assign a role to a user |
 | `DELETE /api/v1/users/:id/roles/:role` | 🔒 + `role:assign` | Remove a role from a user |
+| `GET /api/v1/audit-logs` | 🔒 + `audit:read` | List the audit trail (paginated, filterable) |
 | `GET /api/docs` | public | Swagger UI (use **Authorize** to send the token) |
 
 Seeded dev login: `admin@example.com` / `Admin123!ChangeMe` (role `admin`, all permissions).

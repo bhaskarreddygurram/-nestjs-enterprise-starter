@@ -7,6 +7,8 @@ import { Prisma, User } from '@prisma/client';
 import * as argon2 from 'argon2';
 import { PageMetaDto, PaginatedDto } from '../../common/dto/page-meta.dto';
 import { parseSort } from '../../common/utils/sort.util';
+import { AuditEmitter } from '../audit/audit.emitter';
+import { AuditAction } from '../../shared/events/audit.event';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { UserQueryDto, USER_SORTABLE_FIELDS } from './dto/user-query.dto';
@@ -15,7 +17,10 @@ import { UsersRepository } from './users.repository';
 
 @Injectable()
 export class UsersService {
-  constructor(private readonly usersRepository: UsersRepository) {}
+  constructor(
+    private readonly usersRepository: UsersRepository,
+    private readonly audit: AuditEmitter,
+  ) {}
 
   async create(dto: CreateUserDto): Promise<UserResponseDto> {
     const existing = await this.usersRepository.findByEmail(dto.email);
@@ -32,6 +37,12 @@ export class UsersService {
       isActive: dto.isActive ?? true,
     });
 
+    this.audit.emit({
+      action: AuditAction.USER_CREATED,
+      resource: 'user',
+      resourceId: user.id,
+      metadata: { email: user.email },
+    });
     return UserResponseDto.fromEntity(user);
   }
 
@@ -89,6 +100,12 @@ export class UsersService {
     }
 
     const updated = await this.usersRepository.update(id, dto);
+    this.audit.emit({
+      action: AuditAction.USER_UPDATED,
+      resource: 'user',
+      resourceId: id,
+      metadata: { fields: Object.keys(dto) },
+    });
     return UserResponseDto.fromEntity(updated);
   }
 
@@ -98,6 +115,11 @@ export class UsersService {
       throw new NotFoundException(`User with id "${id}" not found`);
     }
     await this.usersRepository.softDelete(id);
+    this.audit.emit({
+      action: AuditAction.USER_DELETED,
+      resource: 'user',
+      resourceId: id,
+    });
   }
 
   // --- Internal, for the Auth module only --------------------------------

@@ -1,7 +1,9 @@
 import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { PassportStrategy } from '@nestjs/passport';
+import { ClsService } from 'nestjs-cls';
 import { ExtractJwt, Strategy } from 'passport-jwt';
+import { CLS_ACTOR_ID } from '../../../common/cls.constants';
 import { RbacService } from '../../rbac/rbac.service';
 import { UsersService } from '../../users/users.service';
 import { AuthenticatedUser } from '../authenticated-user.interface';
@@ -13,6 +15,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     config: ConfigService,
     private readonly usersService: UsersService,
     private readonly rbacService: RbacService,
+    private readonly cls: ClsService,
   ) {
     super({
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
@@ -35,6 +38,9 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     const { roles, permissions } = await this.rbacService.getUserAuthorization(
       user.id,
     );
+
+    // Make the actor available to the audit trail for this request.
+    this.cls.set(CLS_ACTOR_ID, user.id);
 
     return {
       id: user.id,

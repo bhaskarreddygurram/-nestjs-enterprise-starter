@@ -14,8 +14,9 @@ A reusable, production-grade backend platform built with **NestJS + TypeScript +
 | 2 | User Module (CRUD, pagination, argon2 hashing) | ✅ Complete |
 | 3 | Authentication (JWT login/register, global guard) | ✅ Complete |
 | 4 | Refresh Tokens & Sessions (rotation + reuse detection) | ✅ Complete |
-| 5 | Authorization (RBAC) | ⏳ Next |
-| 6+ | Hardening, Audit, Files, … | ⬜ Planned |
+| 5 | Authorization (RBAC: roles + permissions) | ✅ Complete |
+| 6 | Cross-cutting Hardening | ⏳ Next |
+| 7+ | Audit, Files, Notifications, … | ⬜ Planned |
 
 ## Tech Stack
 
@@ -60,11 +61,16 @@ The API boots at `http://localhost:8000/api`.
 | `POST /api/v1/auth/refresh` | public | Rotate refresh token → new token pair |
 | `POST /api/v1/auth/logout` | public | Revoke one refresh-token session |
 | `POST /api/v1/auth/logout-all` | 🔒 Bearer | Revoke all sessions for the user |
-| `GET /api/v1/auth/me` | 🔒 Bearer | Current authenticated user |
-| `… /api/v1/users` | 🔒 Bearer | User CRUD (all protected) |
+| `GET /api/v1/auth/me` | 🔒 Bearer | Current user + resolved roles/permissions |
+| `… /api/v1/users` | 🔒 + `user:*` | User CRUD — each route needs a permission |
+| `GET /api/v1/roles` | 🔒 + `role:read` | List roles |
+| `POST /api/v1/users/:id/roles` | 🔒 + `role:assign` | Assign a role to a user |
+| `DELETE /api/v1/users/:id/roles/:role` | 🔒 + `role:assign` | Remove a role from a user |
 | `GET /api/docs` | public | Swagger UI (use **Authorize** to send the token) |
 
-Seeded dev login: `admin@example.com` / `Admin123!ChangeMe`.
+Seeded dev login: `admin@example.com` / `Admin123!ChangeMe` (role `admin`, all permissions).
+
+**RBAC model:** permission-based (`resource:action`). `@Roles()` / `@Permissions()` decorators are enforced by a global `AuthorizationGuard` that runs after the JWT guard. Permissions are resolved per-request from the user's roles.
 
 ## Project Structure
 

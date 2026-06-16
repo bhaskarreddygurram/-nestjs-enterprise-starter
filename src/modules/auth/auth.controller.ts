@@ -18,7 +18,7 @@ import {
 } from '@nestjs/swagger';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { Public } from '../../common/decorators/public.decorator';
-import { UserResponseDto } from '../users/dto/user-response.dto';
+import { AuthenticatedUser } from './authenticated-user.interface';
 import { AuthService } from './auth.service';
 import { AuthResponseDto } from './dto/auth-response.dto';
 import { LoginDto } from './dto/login.dto';
@@ -72,10 +72,12 @@ export class AuthController {
 
   @Get('me')
   @ApiBearerAuth()
-  @ApiOperation({ summary: 'Get the currently authenticated user' })
-  @ApiOkResponse({ type: UserResponseDto })
+  @ApiOperation({
+    summary: 'Get the current user with resolved roles + permissions',
+  })
+  @ApiOkResponse({ description: 'Authenticated principal' })
   @ApiUnauthorizedResponse({ description: 'Missing or invalid token' })
-  me(@CurrentUser() user: UserResponseDto): UserResponseDto {
+  me(@CurrentUser() user: AuthenticatedUser): AuthenticatedUser {
     return user;
   }
 

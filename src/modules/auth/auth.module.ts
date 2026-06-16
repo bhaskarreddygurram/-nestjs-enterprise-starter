@@ -3,7 +3,9 @@ import { ConfigService } from '@nestjs/config';
 import { APP_GUARD } from '@nestjs/core';
 import { JwtModule, JwtSignOptions } from '@nestjs/jwt';
 import { PassportModule } from '@nestjs/passport';
+import { AuthorizationGuard } from '../../common/guards/authorization.guard';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
+import { RbacModule } from '../rbac/rbac.module';
 import { UsersModule } from '../users/users.module';
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
@@ -14,6 +16,7 @@ import { JwtStrategy } from './strategies/jwt.strategy';
 @Module({
   imports: [
     UsersModule,
+    RbacModule,
     PassportModule,
     JwtModule.registerAsync({
       inject: [ConfigService],
@@ -35,8 +38,10 @@ import { JwtStrategy } from './strategies/jwt.strategy';
     JwtStrategy,
     RefreshTokenService,
     RefreshTokenRepository,
-    // Registered globally: every route requires a valid JWT unless @Public().
+    // Order matters: authentication first (populates request.user), then
+    // authorization reads the principal's roles/permissions.
     { provide: APP_GUARD, useClass: JwtAuthGuard },
+    { provide: APP_GUARD, useClass: AuthorizationGuard },
   ],
 })
 export class AuthModule {}

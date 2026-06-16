@@ -25,9 +25,61 @@ model User {
   deletedAt        DateTime? @map("deleted_at")
 
   refreshTokens RefreshToken[]
+  roles         UserRole[]
 
   @@index([email])
   @@map("users")
+}
+
+/// A named bundle of permissions (e.g. "admin", "user").
+model Role {
+  id          String   @id @default(uuid()) @db.Uuid
+  name        String   @unique
+  description String?
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  users       UserRole[]
+  permissions RolePermission[]
+
+  @@map("roles")
+}
+
+/// A fine-grained capability, modelled as resource + action (e.g. user:read).
+model Permission {
+  id        String   @id @default(uuid()) @db.Uuid
+  resource  String
+  action    String
+  createdAt DateTime @default(now()) @map("created_at")
+
+  roles RolePermission[]
+
+  @@unique([resource, action])
+  @@map("permissions")
+}
+
+/// Join: roles ⇄ permissions (many-to-many).
+model RolePermission {
+  roleId       String @map("role_id") @db.Uuid
+  permissionId String @map("permission_id") @db.Uuid
+
+  role       Role       @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  permission Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+
+  @@id([roleId, permissionId])
+  @@map("role_permissions")
+}
+
+/// Join: users ⇄ roles (many-to-many).
+model UserRole {
+  userId String @map("user_id") @db.Uuid
+  roleId String @map("role_id") @db.Uuid
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role Role @relation(fields: [roleId], references: [id], onDelete: Cascade)
+
+  @@id([userId, roleId])
+  @@map("user_roles")
 }
 
 /// A single refresh-token session. Only the SHA-256 hash of the token secret

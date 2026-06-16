@@ -4,6 +4,7 @@ import { PrismaModule } from './core/database/prisma.module';
 import { RedisModule } from './core/redis/redis.module';
 import { HealthModule } from './core/health/health.module';
 import { AuthModule } from './modules/auth/auth.module';
+import { RbacModule } from './modules/rbac/rbac.module';
 import { UsersModule } from './modules/users/users.module';
 
 /**
@@ -22,6 +23,7 @@ import { UsersModule } from './modules/users/users.module';
     RedisModule,
     HealthModule,
     UsersModule,
+    RbacModule,
     AuthModule,
   ],
 })

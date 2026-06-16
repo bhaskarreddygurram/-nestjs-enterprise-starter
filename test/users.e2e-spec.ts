@@ -9,21 +9,23 @@ import { AppModule } from '../src/app.module';
 
 /**
  * Full CRUD journey against the real app + database.
- * Requires the docker infra to be running (`npm run docker:up`).
+ * Requires the docker infra to be running (`npm run docker:up`) and the seed
+ * to have run (`npm run db:seed`) so the admin user has user:* permissions.
  *
- * /users is protected (Phase 3), so we register an account first and send
- * the bearer token on every request.
+ * /users is protected by JWT (Phase 3) AND RBAC permissions (Phase 5), so we
+ * log in as the seeded admin. A permission-less registered user is also used
+ * to assert 403.
  */
 describe('Users (e2e)', () => {
   let app: INestApplication;
-  let token: string;
+  let adminToken: string;
+  let noPermToken: string;
   let createdId: string;
 
   const stamp = Date.now();
   const email = `e2e-user-${stamp}@example.com`;
-  const authEmail = `e2e-auth-${stamp}@example.com`;
 
-  const auth = () => `Bearer ${token}`;
+  const adminAuth = () => `Bearer ${adminToken}`;
 
   beforeAll(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
@@ -43,11 +45,21 @@ describe('Users (e2e)', () => {
     );
     await app.init();
 
-    const res = await request(app.getHttpServer())
+    const login = await request(app.getHttpServer())
+      .post('/api/v1/auth/login')
+      .send({ email: 'admin@example.com', password: 'Admin123!ChangeMe' })
+      .expect(200);
+    adminToken = (login.body as { accessToken: string }).accessToken;
+
+    // A freshly-registered user has no roles → no permissions.
+    const reg = await request(app.getHttpServer())
       .post('/api/v1/auth/register')
-      .send({ email: authEmail, password: 'Str0ng!Passw0rd' })
+      .send({
+        email: `e2e-noperm-${stamp}@example.com`,
+        password: 'Str0ng!Passw0rd',
+      })
       .expect(201);
-    token = (res.body as { accessToken: string }).accessToken;
+    noPermToken = (reg.body as { accessToken: string }).accessToken;
   });
 
   afterAll(async () => {
@@ -58,10 +70,17 @@ describe('Users (e2e)', () => {
     return request(app.getHttpServer()).get('/api/v1/users').expect(401);
   });
 
-  it('POST /users → 201 creates a user without exposing the hash', async () => {
+  it('GET /users with a permission-less token → 403', () => {
+    return request(app.getHttpServer())
+      .get('/api/v1/users')
+      .set('Authorization', `Bearer ${noPermToken}`)
+      .expect(403);
+  });
+
+  it('POST /users (admin) → 201 creates a user without exposing the hash', async () => {
     const res = await request(app.getHttpServer())
       .post('/api/v1/users')
-      .set('Authorization', auth())
+      .set('Authorization', adminAuth())
       .send({
         email,
         password: 'Str0ng!Passw0rd',
@@ -80,7 +99,7 @@ describe('Users (e2e)', () => {
   it('POST /users with the same email → 409', () => {
     return request(app.getHttpServer())
       .post('/api/v1/users')
-      .set('Authorization', auth())
+      .set('Authorization', adminAuth())
       .send({ email, password: 'Str0ng!Passw0rd' })
       .expect(409);
   });
@@ -88,7 +107,7 @@ describe('Users (e2e)', () => {
   it('POST /users with a weak password → 400', () => {
     return request(app.getHttpServer())
       .post('/api/v1/users')
-      .set('Authorization', auth())
+      .set('Authorization', adminAuth())
       .send({ email: `weak-${stamp}@example.com`, password: 'short' })
       .expect(400);
   });
@@ -96,7 +115,7 @@ describe('Users (e2e)', () => {
   it('GET /users → 200 paginated list containing the new user', async () => {
     const res = await request(app.getHttpServer())
       .get('/api/v1/users')
-      .set('Authorization', auth())
+      .set('Authorization', adminAuth())
       .query({ search: email, limit: 5 })
       .expect(200);
 
@@ -111,7 +130,7 @@ describe('Users (e2e)', () => {
   it('GET /users?sort=passwordHash → 400 (whitelist enforced)', () => {
     return request(app.getHttpServer())
       .get('/api/v1/users')
-      .set('Authorization', auth())
+      .set('Authorization', adminAuth())
       .query({ sort: 'passwordHash' })
       .expect(400);
   });
@@ -119,7 +138,7 @@ describe('Users (e2e)', () => {
   it('GET /users/:id → 200 returns the user', async () => {
     const res = await request(app.getHttpServer())
       .get(`/api/v1/users/${createdId}`)
-      .set('Authorization', auth())
+      .set('Authorization', adminAuth())
       .expect(200);
 
     expect((res.body as { email: string }).email).toBe(email);
@@ -128,14 +147,14 @@ describe('Users (e2e)', () => {
   it('GET /users/:id with a non-uuid → 400', () => {
     return request(app.getHttpServer())
       .get('/api/v1/users/not-a-uuid')
-      .set('Authorization', auth())
+      .set('Authorization', adminAuth())
       .expect(400);
   });
 
   it('PATCH /users/:id → 200 updates profile fields', async () => {
     const res = await request(app.getHttpServer())
       .patch(`/api/v1/users/${createdId}`)
-      .set('Authorization', auth())
+      .set('Authorization', adminAuth())
       .send({ firstName: 'Updated' })
       .expect(200);
 
@@ -145,14 +164,14 @@ describe('Users (e2e)', () => {
   it('DELETE /users/:id → 204 soft-deletes', () => {
     return request(app.getHttpServer())
       .delete(`/api/v1/users/${createdId}`)
-      .set('Authorization', auth())
+      .set('Authorization', adminAuth())
       .expect(204);
   });
 
   it('GET /users/:id after delete → 404 (soft-deleted rows are invisible)', () => {
     return request(app.getHttpServer())
       .get(`/api/v1/users/${createdId}`)
-      .set('Authorization', auth())
+      .set('Authorization', adminAuth())
       .expect(404);
   });
 });

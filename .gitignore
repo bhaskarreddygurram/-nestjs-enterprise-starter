@@ -16,6 +16,9 @@ yarn-error.log*
 .env.local
 .env.*.local
 
+# uploaded files (local storage backend)
+/uploads
+
 # tests / coverage
 /coverage
 .nyc_output

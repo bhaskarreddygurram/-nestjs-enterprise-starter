@@ -36,6 +36,11 @@ export interface AppConfig {
     ttl: number;
     limit: number;
   };
+  upload: {
+    dir: string;
+    maxSizeBytes: number;
+    allowedMimeTypes: string[];
+  };
 }
 
 export default (): AppConfig => ({
@@ -71,5 +76,17 @@ export default (): AppConfig => ({
   throttle: {
     ttl: parseInt(process.env.THROTTLE_TTL ?? '60000', 10),
     limit: parseInt(process.env.THROTTLE_LIMIT ?? '100', 10),
+  },
+  upload: {
+    dir: process.env.UPLOAD_DIR ?? './uploads',
+    maxSizeBytes:
+      parseInt(process.env.UPLOAD_MAX_SIZE_MB ?? '5', 10) * 1024 * 1024,
+    allowedMimeTypes: (
+      process.env.UPLOAD_ALLOWED_MIME ??
+      'image/png,image/jpeg,image/gif,application/pdf,text/plain'
+    )
+      .split(',')
+      .map((t) => t.trim())
+      .filter(Boolean),
   },
 });

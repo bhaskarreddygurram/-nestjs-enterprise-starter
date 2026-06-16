@@ -26,9 +26,29 @@ model User {
 
   refreshTokens RefreshToken[]
   roles         UserRole[]
+  files         File[]
 
   @@index([email])
   @@map("users")
+}
+
+/// Uploaded file metadata. The bytes live in the storage backend (local disk
+/// or S3); only the storage key + metadata are kept here. Soft-deleted on
+/// removal (the physical object is deleted, the row is retained).
+model File {
+  id           String    @id @default(uuid()) @db.Uuid
+  originalName String    @map("original_name")
+  storageKey   String    @unique @map("storage_key")
+  mimeType     String    @map("mime_type")
+  size         Int
+  uploaderId   String?   @map("uploader_id") @db.Uuid
+  createdAt    DateTime  @default(now()) @map("created_at")
+  deletedAt    DateTime? @map("deleted_at")
+
+  uploader User? @relation(fields: [uploaderId], references: [id], onDelete: SetNull)
+
+  @@index([uploaderId])
+  @@map("files")
 }
 
 /// A named bundle of permissions (e.g. "admin", "user").

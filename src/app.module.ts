@@ -17,6 +17,7 @@ import { RedisModule } from './core/redis/redis.module';
 import { HealthModule } from './core/health/health.module';
 import { AuditModule } from './modules/audit/audit.module';
 import { AuthModule } from './modules/auth/auth.module';
+import { FilesModule } from './modules/files/files.module';
 import { RbacModule } from './modules/rbac/rbac.module';
 import { UsersModule } from './modules/users/users.module';
 
@@ -67,6 +68,7 @@ import { UsersModule } from './modules/users/users.module';
     UsersModule,
     RbacModule,
     AuthModule,
+    FilesModule,
   ],
   providers: [
     { provide: APP_GUARD, useClass: AppThrottlerGuard },

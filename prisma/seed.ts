@@ -23,6 +23,9 @@ const PERMISSIONS: Array<[resource: string, action: string]> = [
   ['role', 'read'],
   ['role', 'assign'],
   ['audit', 'read'],
+  ['file', 'read'],
+  ['file', 'create'],
+  ['file', 'delete'],
 ];
 
 async function main(): Promise<void> {

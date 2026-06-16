@@ -40,6 +40,13 @@ export const envValidationSchema = Joi.object({
   THROTTLE_TTL: Joi.number().integer().min(1000).default(60000),
   THROTTLE_LIMIT: Joi.number().integer().min(1).default(100),
 
+  // File uploads
+  UPLOAD_DIR: Joi.string().default('./uploads'),
+  UPLOAD_MAX_SIZE_MB: Joi.number().integer().min(1).default(5),
+  UPLOAD_ALLOWED_MIME: Joi.string().default(
+    'image/png,image/jpeg,image/gif,application/pdf,text/plain',
+  ),
+
   // Postgres container credentials (used by docker-compose; optional for the app)
   POSTGRES_USER: Joi.string().optional(),
   POSTGRES_PASSWORD: Joi.string().optional(),

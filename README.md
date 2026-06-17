@@ -18,8 +18,9 @@ A reusable, production-grade backend platform built with **NestJS + TypeScript +
 | 6 | Cross-cutting Hardening (envelopes, Helmet, rate limit) | ✅ Complete |
 | 7 | Audit Logging (event-driven, immutable trail) | ✅ Complete |
 | 8 | File Management (upload/download, storage adapter) | ✅ Complete |
-| 9 | Notifications | ⏳ Next |
-| 10+ | 2FA, password policies, … | ⬜ Planned |
+| 9 | Notifications (in-app + email, event-driven) | ✅ Complete |
+| 10 | Security Depth (2FA, password policies) | ⏳ Next |
+| 11+ | Observability, CI/CD | ⬜ Planned |
 
 ## Tech Stack
 
@@ -74,6 +75,10 @@ The API boots at `http://localhost:8000/api`.
 | `GET /api/v1/files` | 🔒 + `file:read` | List files (paginated) |
 | `GET /api/v1/files/:id/download` | 🔒 + `file:read` | Download file contents |
 | `DELETE /api/v1/files/:id` | 🔒 + `file:delete` | Delete a file |
+| `GET /api/v1/notifications` | 🔒 Bearer | List your notifications (paginated) |
+| `GET /api/v1/notifications/unread-count` | 🔒 Bearer | Your unread count |
+| `PATCH /api/v1/notifications/:id/read` | 🔒 Bearer | Mark one read |
+| `POST /api/v1/notifications/read-all` | 🔒 Bearer | Mark all read |
 | `GET /api/docs` | public | Swagger UI (use **Authorize** to send the token) |
 
 Seeded dev login: `admin@example.com` / `Admin123!ChangeMe` (role `admin`, all permissions).

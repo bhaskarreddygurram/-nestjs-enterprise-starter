@@ -41,6 +41,9 @@ export interface AppConfig {
     maxSizeBytes: number;
     allowedMimeTypes: string[];
   };
+  mail: {
+    from: string;
+  };
 }
 
 export default (): AppConfig => ({
@@ -88,5 +91,8 @@ export default (): AppConfig => ({
       .split(',')
       .map((t) => t.trim())
       .filter(Boolean),
+  },
+  mail: {
+    from: process.env.MAIL_FROM ?? 'no-reply@enterprise.local',
   },
 });

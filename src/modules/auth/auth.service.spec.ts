@@ -4,6 +4,7 @@ import { JwtService } from '@nestjs/jwt';
 import { Test, TestingModule } from '@nestjs/testing';
 import { User } from '@prisma/client';
 import * as argon2 from 'argon2';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import { UserResponseDto } from '../users/dto/user-response.dto';
 import { UsersService } from '../users/users.service';
 import { AuditEmitter } from '../audit/audit.emitter';
@@ -65,6 +66,7 @@ describe('AuthService', () => {
           },
         },
         { provide: AuditEmitter, useValue: { emit: jest.fn() } },
+        { provide: EventEmitter2, useValue: { emit: jest.fn() } },
       ],
     }).compile();
 

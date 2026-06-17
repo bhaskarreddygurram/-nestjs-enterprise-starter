@@ -47,6 +47,9 @@ export const envValidationSchema = Joi.object({
     'image/png,image/jpeg,image/gif,application/pdf,text/plain',
   ),
 
+  // Mail (console transport in dev; swap provider for SMTP in prod)
+  MAIL_FROM: Joi.string().default('no-reply@enterprise.local'),
+
   // Postgres container credentials (used by docker-compose; optional for the app)
   POSTGRES_USER: Joi.string().optional(),
   POSTGRES_PASSWORD: Joi.string().optional(),

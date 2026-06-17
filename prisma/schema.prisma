@@ -27,9 +27,26 @@ model User {
   refreshTokens RefreshToken[]
   roles         UserRole[]
   files         File[]
+  notifications Notification[]
 
   @@index([email])
   @@map("users")
+}
+
+/// In-app notification for a single user. `readAt` null = unread.
+model Notification {
+  id        String    @id @default(uuid()) @db.Uuid
+  userId    String    @map("user_id") @db.Uuid
+  type      String // e.g. 'welcome', 'system'
+  title     String
+  message   String
+  readAt    DateTime? @map("read_at")
+  createdAt DateTime  @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("notifications")
 }
 
 /// Uploaded file metadata. The bytes live in the storage backend (local disk

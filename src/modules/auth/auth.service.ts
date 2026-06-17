@@ -1,11 +1,13 @@
 import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import { JwtService } from '@nestjs/jwt';
 import * as argon2 from 'argon2';
 import { UserResponseDto } from '../users/dto/user-response.dto';
 import { UsersService } from '../users/users.service';
 import { AuditEmitter } from '../audit/audit.emitter';
 import { AuditAction } from '../../shared/events/audit.event';
+import { AppEvent, UserRegisteredEvent } from '../../shared/events/app.event';
 import { AuthResponseDto } from './dto/auth-response.dto';
 import { LoginDto } from './dto/login.dto';
 import { RegisterDto } from './dto/register.dto';
@@ -20,6 +22,7 @@ export class AuthService {
     private readonly config: ConfigService,
     private readonly refreshTokens: RefreshTokenService,
     private readonly audit: AuditEmitter,
+    private readonly events: EventEmitter2,
   ) {}
 
   async register(dto: RegisterDto): Promise<AuthResponseDto> {
@@ -37,6 +40,12 @@ export class AuthService {
       resourceId: user.id,
       metadata: { email: user.email },
     });
+    // Domain event: notifications (and any future module) react to this.
+    this.events.emit(AppEvent.USER_REGISTERED, {
+      userId: user.id,
+      email: user.email,
+      name: user.firstName,
+    } satisfies UserRegisteredEvent);
     return this.buildAuthResponse(user);
   }
 

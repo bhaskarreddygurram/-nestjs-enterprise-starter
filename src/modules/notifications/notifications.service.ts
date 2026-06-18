@@ -3,7 +3,7 @@ import { PageMetaDto, PaginatedDto } from '../../common/dto/page-meta.dto';
 import { PaginationQueryDto } from '../../common/dto/pagination-query.dto';
 import { UserRegisteredEvent } from '../../shared/events/app.event';
 import { NotificationResponseDto } from './dto/notification-response.dto';
-import { MAIL_PROVIDER, MailProvider } from './mail/mail.interface';
+import { MAIL_PROVIDER, MailProvider } from '../mail/mail.interface';
 import { NotificationsRepository } from './notifications.repository';
 import { templates } from './templates';
 

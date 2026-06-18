@@ -134,4 +134,50 @@ export class UsersService {
   findEntityById(id: string): Promise<User | null> {
     return this.usersRepository.findById(id);
   }
+
+  // --- Security depth (Phase 10), Auth module only -----------------------
+
+  /** Atomically increment the failed-login counter; returns the new count. */
+  async registerFailedLogin(id: string): Promise<number> {
+    const updated = await this.usersRepository.update(id, {
+      failedLoginAttempts: { increment: 1 },
+    });
+    return updated.failedLoginAttempts;
+  }
+
+  /** Lock the account until the given instant. */
+  lockAccount(id: string, until: Date): Promise<User> {
+    return this.usersRepository.update(id, { lockedUntil: until });
+  }
+
+  /** Clear the lockout state after a successful login. */
+  clearLoginFailures(id: string): Promise<User> {
+    return this.usersRepository.update(id, {
+      failedLoginAttempts: 0,
+      lockedUntil: null,
+    });
+  }
+
+  /** Hash + store a new password and clear any lockout. */
+  async setPassword(id: string, plainPassword: string): Promise<void> {
+    const passwordHash = await argon2.hash(plainPassword);
+    await this.usersRepository.update(id, {
+      passwordHash,
+      failedLoginAttempts: 0,
+      lockedUntil: null,
+    });
+  }
+
+  /** Store (or clear) the pending/active TOTP secret. */
+  setTwoFactorSecret(id: string, secret: string | null): Promise<User> {
+    return this.usersRepository.update(id, { twoFactorSecret: secret });
+  }
+
+  /** Flip the 2FA flag; disabling also clears the stored secret. */
+  setTwoFactorEnabled(id: string, enabled: boolean): Promise<User> {
+    return this.usersRepository.update(id, {
+      twoFactorEnabled: enabled,
+      ...(enabled ? {} : { twoFactorSecret: null }),
+    });
+  }
 }

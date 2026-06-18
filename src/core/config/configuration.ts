@@ -44,6 +44,14 @@ export interface AppConfig {
   mail: {
     from: string;
   };
+  security: {
+    maxLoginAttempts: number;
+    lockoutMinutes: number;
+    passwordResetTtlMinutes: number;
+    appWebUrl: string;
+    twoFactorIssuer: string;
+    twoFactorChallengeTtl: string;
+  };
 }
 
 export default (): AppConfig => ({
@@ -94,5 +102,19 @@ export default (): AppConfig => ({
   },
   mail: {
     from: process.env.MAIL_FROM ?? 'no-reply@enterprise.local',
+  },
+  security: {
+    maxLoginAttempts: parseInt(
+      process.env.SECURITY_MAX_LOGIN_ATTEMPTS ?? '5',
+      10,
+    ),
+    lockoutMinutes: parseInt(process.env.SECURITY_LOCKOUT_MINUTES ?? '15', 10),
+    passwordResetTtlMinutes: parseInt(
+      process.env.PASSWORD_RESET_TTL_MINUTES ?? '30',
+      10,
+    ),
+    appWebUrl: process.env.APP_WEB_URL ?? 'http://localhost:3000',
+    twoFactorIssuer: process.env.TWO_FACTOR_ISSUER ?? 'Enterprise Starter',
+    twoFactorChallengeTtl: process.env.TWO_FACTOR_CHALLENGE_TTL ?? '5m',
   },
 });

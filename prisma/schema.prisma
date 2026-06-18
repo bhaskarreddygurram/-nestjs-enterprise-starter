@@ -13,24 +13,68 @@ datasource db {
 /// Application user / identity anchor.
 /// Columns use snake_case in the database; fields use camelCase in code.
 model User {
-  id               String    @id @default(uuid()) @db.Uuid
-  email            String    @unique
-  passwordHash     String    @map("password_hash")
-  firstName        String?   @map("first_name")
-  lastName         String?   @map("last_name")
-  isActive         Boolean   @default(true) @map("is_active")
-  twoFactorEnabled Boolean   @default(false) @map("two_factor_enabled")
-  createdAt        DateTime  @default(now()) @map("created_at")
-  updatedAt        DateTime  @updatedAt @map("updated_at")
-  deletedAt        DateTime? @map("deleted_at")
+  id           String  @id @default(uuid()) @db.Uuid
+  email        String  @unique
+  passwordHash String  @map("password_hash")
+  firstName    String? @map("first_name")
+  lastName     String? @map("last_name")
+  isActive     Boolean @default(true) @map("is_active")
 
-  refreshTokens RefreshToken[]
-  roles         UserRole[]
-  files         File[]
-  notifications Notification[]
+  // --- Security depth (Phase 10) ----------------------------------------
+  // TOTP 2FA. `twoFactorSecret` is the base32 secret (set when enrolling,
+  // confirmed when enabled). Production note: encrypt this at rest (KMS).
+  twoFactorEnabled Boolean @default(false) @map("two_factor_enabled")
+  twoFactorSecret  String? @map("two_factor_secret")
+
+  // Brute-force lockout: failed attempts accumulate; once the threshold is hit
+  // the account is locked until `lockedUntil`. Both reset on a successful login.
+  failedLoginAttempts Int       @default(0) @map("failed_login_attempts")
+  lockedUntil         DateTime? @map("locked_until")
+
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
+  deletedAt DateTime? @map("deleted_at")
+
+  refreshTokens       RefreshToken[]
+  roles               UserRole[]
+  files               File[]
+  notifications       Notification[]
+  passwordResetTokens PasswordResetToken[]
+  recoveryCodes       TwoFactorRecoveryCode[]
 
   @@index([email])
   @@map("users")
+}
+
+/// A single-use, expiring password-reset token. Only the SHA-256 hash of the
+/// secret is stored — the raw token is emailed to the user and never persisted.
+model PasswordResetToken {
+  id        String    @id @default(uuid()) @db.Uuid
+  userId    String    @map("user_id") @db.Uuid
+  tokenHash String    @map("token_hash")
+  expiresAt DateTime  @map("expires_at")
+  usedAt    DateTime? @map("used_at")
+  createdAt DateTime  @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("password_reset_tokens")
+}
+
+/// A single-use 2FA recovery code. Only the argon2 hash is stored; the plaintext
+/// codes are shown to the user exactly once, when 2FA is enabled.
+model TwoFactorRecoveryCode {
+  id        String    @id @default(uuid()) @db.Uuid
+  userId    String    @map("user_id") @db.Uuid
+  codeHash  String    @map("code_hash")
+  usedAt    DateTime? @map("used_at")
+  createdAt DateTime  @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("two_factor_recovery_codes")
 }
 
 /// In-app notification for a single user. `readAt` null = unread.

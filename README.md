@@ -19,8 +19,9 @@ A reusable, production-grade backend platform built with **NestJS + TypeScript +
 | 7 | Audit Logging (event-driven, immutable trail) | ✅ Complete |
 | 8 | File Management (upload/download, storage adapter) | ✅ Complete |
 | 9 | Notifications (in-app + email, event-driven) | ✅ Complete |
-| 10 | Security Depth (2FA, password policies) | ⏳ Next |
-| 11+ | Observability, CI/CD | ⬜ Planned |
+| 10 | Security Depth (2FA, password policy, lockout, reset) | ✅ Complete |
+| 11 | Observability & DevOps (structured logging, metrics) | ⏳ Next |
+| 12 | CI/CD & Release | ⬜ Planned |
 
 ## Tech Stack
 
@@ -66,6 +67,13 @@ The API boots at `http://localhost:8000/api`.
 | `POST /api/v1/auth/logout` | public | Revoke one refresh-token session |
 | `POST /api/v1/auth/logout-all` | 🔒 Bearer | Revoke all sessions for the user |
 | `GET /api/v1/auth/me` | 🔒 Bearer | Current user + resolved roles/permissions |
+| `POST /api/v1/auth/forgot-password` | public | Email a password-reset link (always 204) |
+| `POST /api/v1/auth/reset-password` | public | Set a new password using a reset token |
+| `POST /api/v1/auth/change-password` | 🔒 Bearer | Change password (verifies current) |
+| `POST /api/v1/auth/2fa/setup` | 🔒 Bearer | Begin TOTP enrollment (secret + QR) |
+| `POST /api/v1/auth/2fa/enable` | 🔒 Bearer | Confirm 2FA, get recovery codes |
+| `POST /api/v1/auth/2fa/disable` | 🔒 Bearer | Disable 2FA (needs a valid code) |
+| `POST /api/v1/auth/2fa/authenticate` | public | Complete 2FA login (challenge + code → tokens) |
 | `… /api/v1/users` | 🔒 + `user:*` | User CRUD — each route needs a permission |
 | `GET /api/v1/roles` | 🔒 + `role:read` | List roles |
 | `POST /api/v1/users/:id/roles` | 🔒 + `role:assign` | Assign a role to a user |
@@ -100,6 +108,12 @@ Seeded dev login: `admin@example.com` / `Admin123!ChangeMe` (role `admin`, all p
 ```
 
 Paginated lists put the array in `data` and pagination in `meta`. Health endpoints are exempt (native Terminus shape). Also active: **Helmet** headers, **`x-request-id`** correlation, per-request logging, and **rate limiting** (`429` when exceeded; auth routes stricter).
+
+**Security depth (Phase 10):**
+- **Password policy** — a single `@IsStrongPassword()` decorator (8+ chars, upper/lower/digit/special) enforced on register, reset and change.
+- **Account lockout** — after `SECURITY_MAX_LOGIN_ATTEMPTS` failed logins the account locks for `SECURITY_LOCKOUT_MINUTES`; a successful login clears the counter.
+- **Password reset** — `forgot-password` emails a single-use, expiring token (only its SHA-256 hash is stored; always 204 to prevent enumeration); `reset-password` sets the new password and revokes all sessions.
+- **TOTP 2FA** — RFC 6238 (implemented on Node `crypto`, no external OTP dep), with a QR code for enrollment and one-time recovery codes. With 2FA on, `login` returns a short-lived `challengeToken` instead of tokens; the client completes login at `/auth/2fa/authenticate`.
 
 ## Project Structure
 
@@ -138,6 +152,12 @@ All configuration is validated at boot (`src/core/config/env.validation.ts`). Th
 | `API_VERSION` | `v1` | Default API version |
 | `SWAGGER_ENABLED` | `true` | Toggle Swagger UI |
 | `CORS_ORIGINS` | `*` | Allowed origins (comma-separated) |
+| `SECURITY_MAX_LOGIN_ATTEMPTS` | `5` | Failed logins before lockout |
+| `SECURITY_LOCKOUT_MINUTES` | `15` | Lockout duration |
+| `PASSWORD_RESET_TTL_MINUTES` | `30` | Reset-token lifetime |
+| `APP_WEB_URL` | `http://localhost:3000` | Front-end base for the reset link |
+| `TWO_FACTOR_ISSUER` | `Enterprise Starter` | Issuer shown in authenticator apps |
+| `TWO_FACTOR_CHALLENGE_TTL` | `5m` | 2FA challenge-token lifetime |
 
 ## License
 

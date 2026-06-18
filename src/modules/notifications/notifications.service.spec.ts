@@ -1,7 +1,7 @@
 import { NotFoundException } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import { Notification } from '@prisma/client';
-import { MAIL_PROVIDER } from './mail/mail.interface';
+import { MAIL_PROVIDER } from '../mail/mail.interface';
 import { NotificationsRepository } from './notifications.repository';
 import { NotificationsService } from './notifications.service';
 

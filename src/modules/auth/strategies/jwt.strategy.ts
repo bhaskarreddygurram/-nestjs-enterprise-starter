@@ -30,6 +30,12 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
    * their current roles/permissions. The return value becomes `request.user`.
    */
   async validate(payload: JwtPayload): Promise<AuthenticatedUser> {
+    // A 2FA challenge token carries `sub` too, but it only authorises the
+    // /auth/2fa/authenticate step — never general API access.
+    if (payload.typ === '2fa') {
+      throw new UnauthorizedException('Two-factor authentication incomplete');
+    }
+
     const user = await this.usersService.findEntityById(payload.sub);
     if (!user || !user.isActive) {
       throw new UnauthorizedException('User no longer active');

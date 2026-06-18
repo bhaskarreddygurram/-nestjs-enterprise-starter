@@ -9,7 +9,9 @@ import { UserResponseDto } from '../users/dto/user-response.dto';
 import { UsersService } from '../users/users.service';
 import { AuditEmitter } from '../audit/audit.emitter';
 import { AuthService } from './auth.service';
+import { AuthResponseDto } from './dto/auth-response.dto';
 import { RefreshTokenService } from './refresh-token.service';
+import { TwoFactorService } from './two-factor.service';
 
 jest.mock('argon2', () => ({
   verify: jest.fn(),
@@ -24,6 +26,9 @@ const entity: User = {
   lastName: 'Doe',
   isActive: true,
   twoFactorEnabled: false,
+  twoFactorSecret: null,
+  failedLoginAttempts: 0,
+  lockedUntil: null,
   createdAt: new Date('2026-01-01T00:00:00Z'),
   updatedAt: new Date('2026-01-01T00:00:00Z'),
   deletedAt: null,
@@ -32,7 +37,14 @@ const entity: User = {
 describe('AuthService', () => {
   let service: AuthService;
   let usersService: jest.Mocked<
-    Pick<UsersService, 'create' | 'findEntityByEmail'>
+    Pick<
+      UsersService,
+      | 'create'
+      | 'findEntityByEmail'
+      | 'registerFailedLogin'
+      | 'lockAccount'
+      | 'clearLoginFailures'
+    >
   >;
 
   beforeEach(async () => {
@@ -44,6 +56,9 @@ describe('AuthService', () => {
           useValue: {
             create: jest.fn(),
             findEntityByEmail: jest.fn(),
+            registerFailedLogin: jest.fn().mockResolvedValue(1),
+            lockAccount: jest.fn(),
+            clearLoginFailures: jest.fn(),
           },
         },
         {
@@ -54,7 +69,7 @@ describe('AuthService', () => {
         },
         {
           provide: ConfigService,
-          useValue: { get: jest.fn().mockReturnValue('15m') },
+          useValue: { get: jest.fn((_k: string, d?: unknown) => d ?? '15m') },
         },
         {
           provide: RefreshTokenService,
@@ -64,6 +79,10 @@ describe('AuthService', () => {
             revoke: jest.fn(),
             revokeAll: jest.fn(),
           },
+        },
+        {
+          provide: TwoFactorService,
+          useValue: { verifyCode: jest.fn() },
         },
         { provide: AuditEmitter, useValue: { emit: jest.fn() } },
         { provide: EventEmitter2, useValue: { emit: jest.fn() } },
@@ -97,13 +116,30 @@ describe('AuthService', () => {
       usersService.findEntityByEmail.mockResolvedValue(entity);
       argon2Verify.mockResolvedValue(true);
 
+      const result = (await service.login({
+        email: entity.email,
+        password: 'correct',
+      })) as AuthResponseDto;
+
+      expect(result.accessToken).toBe('signed.jwt.token');
+      expect(result.user.id).toBe(entity.id);
+    });
+
+    it('returns a 2FA challenge (no tokens) when 2FA is enabled', async () => {
+      usersService.findEntityByEmail.mockResolvedValue({
+        ...entity,
+        twoFactorEnabled: true,
+        twoFactorSecret: 'SECRET',
+      });
+      argon2Verify.mockResolvedValue(true);
+
       const result = await service.login({
         email: entity.email,
         password: 'correct',
       });
 
-      expect(result.accessToken).toBe('signed.jwt.token');
-      expect(result.user.id).toBe(entity.id);
+      expect(result).toMatchObject({ twoFactorRequired: true });
+      expect(result).not.toHaveProperty('accessToken');
     });
 
     it('throws 401 when the password is wrong', async () => {
@@ -113,6 +149,33 @@ describe('AuthService', () => {
       await expect(
         service.login({ email: entity.email, password: 'wrong' }),
       ).rejects.toThrow(UnauthorizedException);
+      expect(usersService.registerFailedLogin).toHaveBeenCalledWith(entity.id);
+    });
+
+    it('locks the account after too many failed attempts', async () => {
+      usersService.findEntityByEmail.mockResolvedValue(entity);
+      argon2Verify.mockResolvedValue(false);
+      usersService.registerFailedLogin.mockResolvedValue(5); // hits the default max
+
+      await expect(
+        service.login({ email: entity.email, password: 'wrong' }),
+      ).rejects.toThrow(UnauthorizedException);
+      expect(usersService.lockAccount).toHaveBeenCalledWith(
+        entity.id,
+        expect.any(Date),
+      );
+    });
+
+    it('rejects login while the account is locked', async () => {
+      usersService.findEntityByEmail.mockResolvedValue({
+        ...entity,
+        lockedUntil: new Date(Date.now() + 60_000),
+      });
+
+      await expect(
+        service.login({ email: entity.email, password: 'correct' }),
+      ).rejects.toThrow(UnauthorizedException);
+      expect(argon2Verify).not.toHaveBeenCalled();
     });
 
     it('throws 401 when the user does not exist (no enumeration)', async () => {

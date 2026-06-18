@@ -50,6 +50,14 @@ export const envValidationSchema = Joi.object({
   // Mail (console transport in dev; swap provider for SMTP in prod)
   MAIL_FROM: Joi.string().default('no-reply@enterprise.local'),
 
+  // Security depth (Phase 10): lockout, password reset, 2FA
+  SECURITY_MAX_LOGIN_ATTEMPTS: Joi.number().integer().min(1).default(5),
+  SECURITY_LOCKOUT_MINUTES: Joi.number().integer().min(1).default(15),
+  PASSWORD_RESET_TTL_MINUTES: Joi.number().integer().min(1).default(30),
+  APP_WEB_URL: Joi.string().uri().default('http://localhost:3000'),
+  TWO_FACTOR_ISSUER: Joi.string().default('Enterprise Starter'),
+  TWO_FACTOR_CHALLENGE_TTL: Joi.string().default('5m'),
+
   // Postgres container credentials (used by docker-compose; optional for the app)
   POSTGRES_USER: Joi.string().optional(),
   POSTGRES_PASSWORD: Joi.string().optional(),

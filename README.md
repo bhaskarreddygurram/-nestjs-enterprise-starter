@@ -23,6 +23,25 @@ A reusable, production-grade backend platform built with **NestJS + TypeScript +
 | 11 | Observability & DevOps (Pino logs, metrics, Docker) | ✅ Complete |
 | 12 | CI/CD & Release | ⏳ Next |
 
+## Testing guides
+
+Each phase has a hands-on testing guide in [`docs/`](docs) (Swagger + curl/PowerShell + DB checks + the automated suite):
+
+| Phase | Guide |
+|-------|-------|
+| 0 | [Foundation](docs/TESTING-PHASE-0-FOUNDATION.md) |
+| 1 | [Database Infrastructure](docs/TESTING-PHASE-1-DATABASE.md) |
+| 2 | [User Module](docs/TESTING-PHASE-2-USERS.md) |
+| 3 | [Authentication](docs/TESTING-PHASE-3-AUTH.md) |
+| 4 | [Refresh Tokens](docs/TESTING-PHASE-4-REFRESH.md) |
+| 5 | [Authorization (RBAC)](docs/TESTING-PHASE-5-RBAC.md) |
+| 6 | [Cross-cutting Hardening](docs/TESTING-PHASE-6-HARDENING.md) |
+| 7 | [Audit Logging](docs/TESTING-PHASE-7-AUDIT.md) |
+| 8 | [File Management](docs/TESTING-PHASE-8-FILES.md) |
+| 9 | [Notifications](docs/TESTING-PHASE-9-NOTIFICATIONS.md) |
+| 10 | [Security Depth](docs/TESTING-PHASE-10-SECURITY-DEPTH.md) |
+| 11 | [Observability & DevOps](docs/TESTING-PHASE-11-OBSERVABILITY.md) |
+
 ## Tech Stack
 
 - **Runtime:** Node.js 20+ / TypeScript 5 (strict)

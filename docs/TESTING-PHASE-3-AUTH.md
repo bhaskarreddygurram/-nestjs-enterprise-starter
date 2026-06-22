@@ -3,7 +3,7 @@
 > How to test every Phase 3 API by hand (Swagger, PowerShell/curl) and via the automated suite.
 > Covers: `register`, `login`, `me`, the now-protected `users` routes, and the public `health` routes.
 >
-> Run guide: [`RUNNING-THE-PROJECT.md`](RUNNING-THE-PROJECT.md) · Architecture: [`ARCHITECTURE-ROADMAP.md`](ARCHITECTURE-ROADMAP.md)
+> Prior guide: [`TESTING-PHASE-2-USERS.md`](TESTING-PHASE-2-USERS.md) · Run guide: [`RUNNING-THE-PROJECT.md`](RUNNING-THE-PROJECT.md) · Architecture: [`ARCHITECTURE-ROADMAP.md`](ARCHITECTURE-ROADMAP.md)
 
 ---
 

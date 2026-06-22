@@ -50,6 +50,12 @@ export const envValidationSchema = Joi.object({
   // Mail (console transport in dev; swap provider for SMTP in prod)
   MAIL_FROM: Joi.string().default('no-reply@enterprise.local'),
 
+  // Observability (Phase 11): structured logging + Prometheus metrics
+  LOG_LEVEL: Joi.string()
+    .valid('fatal', 'error', 'warn', 'info', 'debug', 'trace', 'silent')
+    .default('info'),
+  METRICS_ENABLED: Joi.boolean().truthy('true').falsy('false').default(true),
+
   // Security depth (Phase 10): lockout, password reset, 2FA
   SECURITY_MAX_LOGIN_ATTEMPTS: Joi.number().integer().min(1).default(5),
   SECURITY_LOCKOUT_MINUTES: Joi.number().integer().min(1).default(15),

@@ -20,8 +20,8 @@ A reusable, production-grade backend platform built with **NestJS + TypeScript +
 | 8 | File Management (upload/download, storage adapter) | ✅ Complete |
 | 9 | Notifications (in-app + email, event-driven) | ✅ Complete |
 | 10 | Security Depth (2FA, password policy, lockout, reset) | ✅ Complete |
-| 11 | Observability & DevOps (structured logging, metrics) | ⏳ Next |
-| 12 | CI/CD & Release | ⬜ Planned |
+| 11 | Observability & DevOps (Pino logs, metrics, Docker) | ✅ Complete |
+| 12 | CI/CD & Release | ⏳ Next |
 
 ## Tech Stack
 
@@ -61,6 +61,7 @@ The API boots at `http://localhost:8000/api`.
 |----------|------|-------------|
 | `GET /api/v1/health` | public | Liveness (process up) |
 | `GET /api/v1/health/readiness` | public | Readiness (PostgreSQL + Redis reachable) |
+| `GET /metrics` | public | Prometheus metrics (root path, no envelope) |
 | `POST /api/v1/auth/register` | public | Create account, returns access + refresh token |
 | `POST /api/v1/auth/login` | public | Log in, returns access + refresh token |
 | `POST /api/v1/auth/refresh` | public | Rotate refresh token → new token pair |
@@ -109,6 +110,12 @@ Seeded dev login: `admin@example.com` / `Admin123!ChangeMe` (role `admin`, all p
 
 Paginated lists put the array in `data` and pagination in `meta`. Health endpoints are exempt (native Terminus shape). Also active: **Helmet** headers, **`x-request-id`** correlation, per-request logging, and **rate limiting** (`429` when exceeded; auth routes stricter).
 
+**Observability (Phase 11):**
+- **Structured logging** — [Pino](https://getpino.io) via `nestjs-pino`: JSON logs in production, pretty-printed in dev, silenced in tests. Every line carries the request id (reused from `x-request-id`), so logs correlate with the response envelope and the audit trail. Sensitive headers are redacted.
+- **Metrics** — Prometheus exposition at **`GET /metrics`** (root path, un-enveloped): Node/process defaults plus `http_request_duration_seconds` + `http_requests_total`, labelled by method, route *pattern* and status.
+- **Graceful shutdown** — `enableShutdownHooks()` drains the DB/Redis connections on `SIGTERM`/`SIGINT`.
+- **Containerized** — multi-stage `Dockerfile` + an `app` service (opt-in `app` profile) in `docker-compose.yml`.
+
 **Security depth (Phase 10):**
 - **Password policy** — a single `@IsStrongPassword()` decorator (8+ chars, upper/lower/digit/special) enforced on register, reset and change.
 - **Account lockout** — after `SECURITY_MAX_LOGIN_ATTEMPTS` failed logins the account locks for `SECURITY_LOCKOUT_MINUTES`; a successful login clears the counter.
@@ -139,6 +146,21 @@ src/
 | `npm test` | Unit tests |
 | `npm run test:e2e` | End-to-end tests |
 | `npm run test:cov` | Coverage report |
+| `npm run docker:up` | Start infra (PostgreSQL + Redis) |
+| `npm run docker:app` | Build + run the full stack (app + infra) |
+
+### Running the whole stack in Docker
+
+```bash
+# infra only (default) — run the app locally with npm run start:dev
+npm run docker:up
+
+# app + infra — builds the multi-stage image, runs migrations, then starts
+npm run docker:app
+# → API at http://localhost:8000/api/v1, metrics at http://localhost:8000/metrics
+```
+
+The `app` service lives behind a compose `app` profile, so `docker compose up` (infra) is unaffected by it.
 
 ## Configuration
 
@@ -158,6 +180,8 @@ All configuration is validated at boot (`src/core/config/env.validation.ts`). Th
 | `APP_WEB_URL` | `http://localhost:3000` | Front-end base for the reset link |
 | `TWO_FACTOR_ISSUER` | `Enterprise Starter` | Issuer shown in authenticator apps |
 | `TWO_FACTOR_CHALLENGE_TTL` | `5m` | 2FA challenge-token lifetime |
+| `LOG_LEVEL` | `info` | Pino level (`fatal`…`trace`, `silent`) |
+| `METRICS_ENABLED` | `true` | Expose `GET /metrics` |
 
 ## License
 

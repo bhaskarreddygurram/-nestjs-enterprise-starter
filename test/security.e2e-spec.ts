@@ -211,8 +211,8 @@ describe('Security depth (e2e)', () => {
         .set('Authorization', `Bearer ${token}`)
         .send({ code: generateTotp(secret) })
         .expect(201);
-      recoveryCodes = (enable.body as { data: { recoveryCodes: string[] } }).data
-        .recoveryCodes;
+      recoveryCodes = (enable.body as { data: { recoveryCodes: string[] } })
+        .data.recoveryCodes;
       expect(recoveryCodes).toHaveLength(10);
     });
 

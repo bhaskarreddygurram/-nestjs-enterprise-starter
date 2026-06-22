@@ -3,10 +3,17 @@ import { ConfigService } from '@nestjs/config';
 import { NestFactory } from '@nestjs/core';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import helmet from 'helmet';
+import { Logger as PinoLogger } from 'nestjs-pino';
 import { AppModule } from './app.module';
 
 async function bootstrap(): Promise<void> {
-  const app = await NestFactory.create(AppModule);
+  // bufferLogs so early boot logs are flushed through Pino once it's ready.
+  const app = await NestFactory.create(AppModule, { bufferLogs: true });
+  app.useLogger(app.get(PinoLogger));
+
+  // Flush logs + close DB/Redis connections cleanly on SIGTERM/SIGINT.
+  app.enableShutdownHooks();
+
   const config = app.get(ConfigService);
   const logger = new Logger('Bootstrap');
 
@@ -16,8 +23,8 @@ async function bootstrap(): Promise<void> {
   // Security headers
   app.use(helmet());
 
-  // Global route prefix: /api/...
-  app.setGlobalPrefix(apiPrefix);
+  // Global route prefix: /api/...  (/metrics stays at the root for scrapers)
+  app.setGlobalPrefix(apiPrefix, { exclude: ['metrics'] });
 
   // URI versioning: /api/v1/...
   app.enableVersioning({

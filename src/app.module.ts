@@ -9,9 +9,10 @@ import { ClsModule, ClsService } from 'nestjs-cls';
 import { CLS_IP, CLS_REQUEST_ID } from './common/cls.constants';
 import { AppThrottlerGuard } from './common/guards/app-throttler.guard';
 import { GlobalExceptionFilter } from './common/filters/global-exception.filter';
-import { LoggingInterceptor } from './common/interceptors/logging.interceptor';
 import { TransformInterceptor } from './common/interceptors/transform.interceptor';
 import { AppConfigModule } from './core/config/config.module';
+import { LoggerModule } from './core/logger/logger.module';
+import { MetricsModule } from './core/metrics/metrics.module';
 import { PrismaModule } from './core/database/prisma.module';
 import { RedisModule } from './core/redis/redis.module';
 import { HealthModule } from './core/health/health.module';
@@ -30,6 +31,10 @@ import { UsersModule } from './modules/users/users.module';
 @Module({
   imports: [
     AppConfigModule,
+    // Logger first: its middleware sets the request id that the CLS middleware
+    // (mounted next) then reuses, so logs, envelopes and the audit trail share
+    // one id.
+    LoggerModule,
     EventEmitterModule.forRoot(),
     // AsyncLocalStorage: owns x-request-id (read-or-generate), client ip, and
     // the authenticated actor id (set by JwtStrategy). Mounted as middleware,
@@ -65,6 +70,7 @@ import { UsersModule } from './modules/users/users.module';
     PrismaModule,
     RedisModule,
     HealthModule,
+    MetricsModule,
     AuditModule,
     UsersModule,
     RbacModule,
@@ -76,7 +82,6 @@ import { UsersModule } from './modules/users/users.module';
     { provide: APP_GUARD, useClass: AppThrottlerGuard },
     { provide: APP_FILTER, useClass: GlobalExceptionFilter },
     { provide: APP_INTERCEPTOR, useClass: TransformInterceptor },
-    { provide: APP_INTERCEPTOR, useClass: LoggingInterceptor },
   ],
 })
 export class AppModule {}

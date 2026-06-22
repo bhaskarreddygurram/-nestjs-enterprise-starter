@@ -44,6 +44,12 @@ export interface AppConfig {
   mail: {
     from: string;
   };
+  log: {
+    level: string;
+  };
+  metrics: {
+    enabled: boolean;
+  };
   security: {
     maxLoginAttempts: number;
     lockoutMinutes: number;
@@ -102,6 +108,12 @@ export default (): AppConfig => ({
   },
   mail: {
     from: process.env.MAIL_FROM ?? 'no-reply@enterprise.local',
+  },
+  log: {
+    level: process.env.LOG_LEVEL ?? 'info',
+  },
+  metrics: {
+    enabled: (process.env.METRICS_ENABLED ?? 'true') === 'true',
   },
   security: {
     maxLoginAttempts: parseInt(

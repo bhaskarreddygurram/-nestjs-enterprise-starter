@@ -33,7 +33,16 @@ async function main(): Promise<void> {
   const passwordHash = await argon2.hash(ADMIN_PASSWORD);
   const admin = await prisma.user.upsert({
     where: { email: ADMIN_EMAIL },
-    update: { passwordHash },
+    // Normalise the admin to a known-good security state on every seed: no 2FA,
+    // not locked, no stray failed-login counter.
+    update: {
+      passwordHash,
+      isActive: true,
+      twoFactorEnabled: false,
+      twoFactorSecret: null,
+      failedLoginAttempts: 0,
+      lockedUntil: null,
+    },
     create: {
       email: ADMIN_EMAIL,
       passwordHash,

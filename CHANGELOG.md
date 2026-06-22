@@ -7,15 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-### Added
-- **Phase 12 — CI/CD & Release.** GitHub Actions pipeline
-  (lint → typecheck → unit tests + coverage gate → e2e → build → Docker image),
-  with Postgres + Redis service containers; coverage threshold enforced in Jest;
-  Docker image built on every run and published to GHCR on `main`; this changelog.
+_Nothing yet._
 
-## [0.1.0] — 2026-06-22
+## [0.1.0] — 2026-06-23
 
-The foundational build of the enterprise NestJS starter kit (Phases 0–11). Each
+The foundational build of the enterprise NestJS starter kit (Phases 0–12). Each
 phase has a hands-on testing guide in [`docs/`](docs).
 
 ### Added
@@ -53,6 +49,10 @@ phase has a hands-on testing guide in [`docs/`](docs).
 - **Phase 11 — Observability & DevOps.** Structured logging (Pino) with
   request-id correlation and redaction; Prometheus `/metrics`; graceful
   shutdown; multi-stage `Dockerfile` + opt-in compose `app` service.
+- **Phase 12 — CI/CD & Release.** GitHub Actions pipeline
+  (lint → typecheck → unit tests + coverage gate → e2e → build → Docker image),
+  with Postgres + Redis service containers; coverage threshold enforced in Jest;
+  Docker image built on every run and published to GHCR on `main`; this changelog.
 
 [Unreleased]: https://github.com/bhaskarreddygurram/-nestjs-enterprise-starter/compare/v0.1.0...HEAD
 [0.1.0]: https://github.com/bhaskarreddygurram/-nestjs-enterprise-starter/releases/tag/v0.1.0

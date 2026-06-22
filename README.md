@@ -1,9 +1,12 @@
 # Enterprise NestJS Backend Starter Kit
 
+[![CI](https://github.com/bhaskarreddygurram/-nestjs-enterprise-starter/actions/workflows/ci.yml/badge.svg)](https://github.com/bhaskarreddygurram/-nestjs-enterprise-starter/actions/workflows/ci.yml)
+
 A reusable, production-grade backend platform built with **NestJS + TypeScript + PostgreSQL + Prisma + Redis**, designed to be the foundation for any application (CRM, ERP, HR, Inventory, SaaS, E-commerce, Booking, Property Management).
 
 > 📐 Architecture & full roadmap: [`docs/ARCHITECTURE-ROADMAP.md`](docs/ARCHITECTURE-ROADMAP.md)
 > 🚀 How to run (full guide — setup, Docker, DB, troubleshooting): [`docs/RUNNING-THE-PROJECT.md`](docs/RUNNING-THE-PROJECT.md)
+> 📜 Release history: [`CHANGELOG.md`](CHANGELOG.md)
 
 ## Status
 
@@ -21,7 +24,7 @@ A reusable, production-grade backend platform built with **NestJS + TypeScript +
 | 9 | Notifications (in-app + email, event-driven) | ✅ Complete |
 | 10 | Security Depth (2FA, password policy, lockout, reset) | ✅ Complete |
 | 11 | Observability & DevOps (Pino logs, metrics, Docker) | ✅ Complete |
-| 12 | CI/CD & Release | ⏳ Next |
+| 12 | CI/CD & Release (GitHub Actions, coverage gate, CHANGELOG) | ✅ Complete |
 
 ## Testing guides
 
@@ -41,6 +44,7 @@ Each phase has a hands-on testing guide in [`docs/`](docs) (Swagger + curl/Power
 | 9 | [Notifications](docs/TESTING-PHASE-9-NOTIFICATIONS.md) |
 | 10 | [Security Depth](docs/TESTING-PHASE-10-SECURITY-DEPTH.md) |
 | 11 | [Observability & DevOps](docs/TESTING-PHASE-11-OBSERVABILITY.md) |
+| 12 | [CI/CD & Release](docs/TESTING-PHASE-12-CICD.md) |
 
 ## Tech Stack
 

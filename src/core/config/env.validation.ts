@@ -68,6 +68,9 @@ export const envValidationSchema = Joi.object({
   LOG_LEVEL: Joi.string()
     .valid('fatal', 'error', 'warn', 'info', 'debug', 'trace', 'silent')
     .default('info'),
+  // Also write structured JSON logs to files under LOG_DIR (in addition to stdout).
+  LOG_TO_FILE: Joi.boolean().truthy('true').falsy('false').default(false),
+  LOG_DIR: Joi.string().default('./logs'),
   METRICS_ENABLED: Joi.boolean().truthy('true').falsy('false').default(true),
 
   // Security depth (Phase 10): lockout, password reset, 2FA

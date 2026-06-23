@@ -52,8 +52,17 @@ export const envValidationSchema = Joi.object({
     'image/png,image/jpeg,image/gif,application/pdf,text/plain',
   ),
 
-  // Mail (console transport in dev; swap provider for SMTP in prod)
+  // Mail (console transport in dev; set MAIL_TRANSPORT=smtp + creds for prod)
   MAIL_FROM: Joi.string().default('no-reply@enterprise.local'),
+  MAIL_TRANSPORT: Joi.string().valid('console', 'smtp').default('console'),
+  MAIL_HOST: Joi.string().when('MAIL_TRANSPORT', {
+    is: 'smtp',
+    then: Joi.required(),
+  }),
+  MAIL_PORT: Joi.number().port().default(587),
+  MAIL_SECURE: Joi.boolean().truthy('true').falsy('false').default(false),
+  MAIL_USER: Joi.string().allow('').optional(),
+  MAIL_PASSWORD: Joi.string().allow('').optional(),
 
   // Observability (Phase 11): structured logging + Prometheus metrics
   LOG_LEVEL: Joi.string()

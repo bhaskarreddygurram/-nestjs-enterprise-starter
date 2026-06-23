@@ -27,7 +27,10 @@ The app needs three things at runtime:
 | `PORT` | usually injected | most PaaS set this; the app honors it (don't hardcode) |
 | `CORS_ORIGINS` | recommended | your frontend origin, or `*` |
 | `SWAGGER_ENABLED` | optional | `true` to expose `/api/docs` |
-| `MAIL_FROM` + SMTP* | optional | dev uses a console transport; wire a real provider for reset emails |
+| `MAIL_TRANSPORT` | for real email | `smtp` (default `console` logs to stdout) |
+| `MAIL_HOST` / `MAIL_PORT` | if smtp | e.g. `smtp.sendgrid.net` / `587`; `MAIL_SECURE=true` for port 465 |
+| `MAIL_USER` / `MAIL_PASSWORD` | if smtp | SMTP credentials (provider API key, etc.) |
+| `MAIL_FROM` | recommended | the sender address |
 | `LOG_LEVEL` | optional | `info` (default) |
 | `METRICS_ENABLED` | optional | `true` (default) |
 
@@ -211,7 +214,7 @@ Then front it with Nginx + `certbot` (or Caddy) for TLS, reverse-proxying `:443 
 - [ ] `CORS_ORIGINS` set to your real frontend origin (not `*`)
 - [ ] Migrations applied (`prisma migrate deploy` — automatic in the Docker image)
 - [ ] Seeded once, then **admin password changed**
-- [ ] Real SMTP wired up if you rely on password-reset emails (dev = console transport)
+- [ ] Real SMTP wired up if you rely on password-reset emails — set `MAIL_TRANSPORT=smtp` + `MAIL_HOST`/`MAIL_PORT`/`MAIL_USER`/`MAIL_PASSWORD`/`MAIL_FROM` (works with SendGrid, Mailgun, Postmark, Brevo, Amazon SES, Gmail, …). Default `console` just logs.
 - [ ] Postgres backups / persistent volume configured
 - [ ] `/metrics` reachable only by your scraper (network rule) if you consider it sensitive
 - [ ] HTTPS terminated by a reverse proxy (Caddy/Nginx) or the platform

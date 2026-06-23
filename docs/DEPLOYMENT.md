@@ -37,9 +37,31 @@ See [`.env.example`](../.env.example) for the full list (security/2FA tunables, 
 
 ---
 
-## Option A — Free managed (recommended): Render + Neon + Render Key Value
+## Option A — Free managed (recommended): Render
 
-All-free, durable, **zero infrastructure to maintain**. Best for a portfolio/demo.
+All-free, **zero infrastructure to maintain**. Best for a portfolio/demo.
+
+### A0. One-click Blueprint (easiest)
+
+The repo ships a [`render.yaml`](../render.yaml) Blueprint that provisions the
+web service **+ Postgres + Redis** and wires `DATABASE_URL` / `REDIS_URL`
+automatically (and generates a strong `JWT_ACCESS_SECRET`):
+
+1. Render dashboard → **New → Blueprint** → select this repo → **Apply**.
+2. Wait for the three resources to go live (the Docker image builds, then
+   `prisma migrate deploy` runs on start).
+3. Seed once: service → **Shell** → `npm run db:seed`.
+4. Open `https://<svc>.onrender.com/api/docs`.
+
+> Render's *free* Postgres is removed after ~30 days. For a **permanent** free
+> DB, remove the `databases:` block from `render.yaml` (or just override the var
+> in the dashboard) and set `DATABASE_URL` to a [Neon](https://neon.tech) string.
+> Managed Redis is wired via `REDIS_URL` (its connection string carries the
+> password; use a `rediss://` URL for TLS).
+
+The manual, fully-explained path is below if you'd rather click through it.
+
+### A1. Manual: Render + Neon + Render Key Value
 
 **1. Postgres — [Neon](https://neon.tech)** (permanent free tier). Create a project, copy the **direct** connection string (not the `-pooler` one, so migrations run cleanly):
 ```

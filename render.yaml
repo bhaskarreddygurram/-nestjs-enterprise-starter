@@ -1,0 +1,56 @@
+# Render Blueprint — one-click deploy of the whole stack.
+#
+#   Render dashboard → New → Blueprint → pick this repo → Apply.
+#
+# Provisions a Docker web service + a managed Postgres + a managed Key Value
+# (Redis), wiring DATABASE_URL and REDIS_URL automatically and generating a
+# strong JWT secret. Migrations run on container start (the Dockerfile CMD);
+# seed once afterwards from the service Shell:  npm run db:seed
+#
+# NOTE: Render's *free* Postgres is removed after ~30 days. For a permanent free
+# database, delete the `databases:` block below and instead set DATABASE_URL to
+# a Neon (neon.tech) connection string in the dashboard.
+
+databases:
+  - name: enterprise-db
+    plan: free
+    region: frankfurt
+    databaseName: enterprise_db
+    user: enterprise
+
+services:
+  # Managed Redis (Key Value). Internal-only (no public access).
+  - type: redis
+    name: enterprise-redis
+    plan: free
+    region: frankfurt
+    ipAllowList: []
+    maxmemoryPolicy: noeviction
+
+  # The API (built from the multi-stage Dockerfile).
+  - type: web
+    name: enterprise-api
+    runtime: docker
+    plan: free
+    region: frankfurt
+    dockerfilePath: ./Dockerfile
+    healthCheckPath: /api/v1/health
+    autoDeploy: true
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: JWT_ACCESS_SECRET
+        generateValue: true # Render generates a strong secret
+      - key: DATABASE_URL
+        fromDatabase:
+          name: enterprise-db
+          property: connectionString
+      - key: REDIS_URL
+        fromService:
+          type: redis
+          name: enterprise-redis
+          property: connectionString
+      - key: CORS_ORIGINS
+        value: '*' # set to your frontend origin in production
+      - key: SWAGGER_ENABLED
+        value: 'true'

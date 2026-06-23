@@ -16,17 +16,24 @@ import { RedisService } from './redis.service';
       inject: [ConfigService],
       useFactory: (config: ConfigService): Redis => {
         const logger = new Logger('RedisModule');
+        const url = config.get<string>('redis.url');
         const useTls = config.get<boolean>('redis.tls', false);
-        const client = new Redis({
-          host: config.get<string>('redis.host', 'localhost'),
-          port: config.get<number>('redis.port', 6379),
-          password: config.get<string>('redis.password') || undefined,
-          db: config.get<number>('redis.db', 0),
-          maxRetriesPerRequest: null,
-          lazyConnect: false,
-          // Enable TLS for managed providers (Upstash, Redis Cloud, …).
-          ...(useTls ? { tls: {} } : {}),
-        });
+        const baseOptions = { maxRetriesPerRequest: null, lazyConnect: false };
+
+        // A full URL (managed providers usually give one) carries host, port,
+        // password and — via rediss:// — TLS, so it takes precedence over the
+        // discrete REDIS_* fields.
+        const client = url
+          ? new Redis(url, baseOptions)
+          : new Redis({
+              host: config.get<string>('redis.host', 'localhost'),
+              port: config.get<number>('redis.port', 6379),
+              password: config.get<string>('redis.password') || undefined,
+              db: config.get<number>('redis.db', 0),
+              ...baseOptions,
+              // Enable TLS for managed providers (Upstash, Redis Cloud, …).
+              ...(useTls ? { tls: {} } : {}),
+            });
 
         client.on('connect', () => logger.log('Connected to Redis'));
         client.on('error', (err) =>

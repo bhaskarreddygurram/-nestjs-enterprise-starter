@@ -24,6 +24,10 @@ export const envValidationSchema = Joi.object({
     .required(),
 
   // Redis
+  // Optional full URL (overrides REDIS_HOST/PORT/PASSWORD/TLS); rediss:// = TLS.
+  REDIS_URL: Joi.string()
+    .uri({ scheme: ['redis', 'rediss'] })
+    .optional(),
   REDIS_HOST: Joi.string().default('localhost'),
   REDIS_PORT: Joi.number().port().default(6379),
   REDIS_PASSWORD: Joi.string().allow('').optional(),

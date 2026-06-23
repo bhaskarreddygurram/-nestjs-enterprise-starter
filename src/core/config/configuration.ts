@@ -45,7 +45,13 @@ export interface AppConfig {
     allowedMimeTypes: string[];
   };
   mail: {
+    transport: 'console' | 'smtp';
     from: string;
+    host?: string;
+    port: number;
+    secure: boolean;
+    user?: string;
+    password?: string;
   };
   log: {
     level: string;
@@ -113,7 +119,13 @@ export default (): AppConfig => ({
       .filter(Boolean),
   },
   mail: {
+    transport: (process.env.MAIL_TRANSPORT ?? 'console') as 'console' | 'smtp',
     from: process.env.MAIL_FROM ?? 'no-reply@enterprise.local',
+    host: process.env.MAIL_HOST || undefined,
+    port: parseInt(process.env.MAIL_PORT ?? '587', 10),
+    secure: (process.env.MAIL_SECURE ?? 'false') === 'true',
+    user: process.env.MAIL_USER || undefined,
+    password: process.env.MAIL_PASSWORD || undefined,
   },
   log: {
     level: process.env.LOG_LEVEL ?? 'info',

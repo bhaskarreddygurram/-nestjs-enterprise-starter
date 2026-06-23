@@ -1,15 +1,28 @@
 import { Module } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { ConsoleMailProvider } from './console-mail.provider';
-import { MAIL_PROVIDER } from './mail.interface';
+import { MAIL_PROVIDER, MailProvider } from './mail.interface';
+import { SmtpMailProvider } from './smtp-mail.provider';
 
 /**
- * Shared mail transport. Binds MAIL_PROVIDER to the console provider in dev
- * (swap for SMTP/SES in prod) and exports it so any feature module — Auth
- * (password reset), Notifications (welcome) — can send mail without owning a
- * transport of its own.
+ * Shared mail transport, exported for any feature module (Auth password reset,
+ * Notifications welcome) to consume via MAIL_PROVIDER.
+ *
+ * The concrete provider is chosen at runtime from `MAIL_TRANSPORT`:
+ *   console (default) → logs emails to stdout (dev/CI)
+ *   smtp              → real delivery via nodemailer (prod)
  */
 @Module({
-  providers: [{ provide: MAIL_PROVIDER, useClass: ConsoleMailProvider }],
+  providers: [
+    {
+      provide: MAIL_PROVIDER,
+      inject: [ConfigService],
+      useFactory: (config: ConfigService): MailProvider =>
+        config.get<string>('mail.transport') === 'smtp'
+          ? new SmtpMailProvider(config)
+          : new ConsoleMailProvider(config),
+    },
+  ],
   exports: [MAIL_PROVIDER],
 })
 export class MailModule {}

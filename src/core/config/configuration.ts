@@ -26,6 +26,7 @@ export interface AppConfig {
     port: number;
     password?: string;
     db: number;
+    tls: boolean;
   };
   jwt: {
     accessSecret: string;
@@ -81,6 +82,8 @@ export default (): AppConfig => ({
     port: parseInt(process.env.REDIS_PORT ?? '6379', 10),
     password: process.env.REDIS_PASSWORD || undefined,
     db: parseInt(process.env.REDIS_DB ?? '0', 10),
+    // Managed Redis (Upstash, Redis Cloud, etc.) requires TLS (rediss://).
+    tls: (process.env.REDIS_TLS ?? 'false') === 'true',
   },
   jwt: {
     accessSecret: process.env.JWT_ACCESS_SECRET ?? '',

@@ -16,6 +16,7 @@ import { RedisService } from './redis.service';
       inject: [ConfigService],
       useFactory: (config: ConfigService): Redis => {
         const logger = new Logger('RedisModule');
+        const useTls = config.get<boolean>('redis.tls', false);
         const client = new Redis({
           host: config.get<string>('redis.host', 'localhost'),
           port: config.get<number>('redis.port', 6379),
@@ -23,6 +24,8 @@ import { RedisService } from './redis.service';
           db: config.get<number>('redis.db', 0),
           maxRetriesPerRequest: null,
           lazyConnect: false,
+          // Enable TLS for managed providers (Upstash, Redis Cloud, …).
+          ...(useTls ? { tls: {} } : {}),
         });
 
         client.on('connect', () => logger.log('Connected to Redis'));

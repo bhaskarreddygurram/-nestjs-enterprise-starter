@@ -6,6 +6,7 @@ A reusable, production-grade backend platform built with **NestJS + TypeScript +
 
 > 📐 Architecture & full roadmap: [`docs/ARCHITECTURE-ROADMAP.md`](docs/ARCHITECTURE-ROADMAP.md)
 > 🚀 How to run (full guide — setup, Docker, DB, troubleshooting): [`docs/RUNNING-THE-PROJECT.md`](docs/RUNNING-THE-PROJECT.md)
+> ☁️ How to deploy (free PaaS, VPS, CloudPanel, native): [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md)
 > 📜 Release history: [`CHANGELOG.md`](CHANGELOG.md)
 
 ## Status
